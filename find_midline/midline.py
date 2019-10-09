@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import xml.etree.ElementTree as ET
-import sys, csv
+import sys, csv, os
 
 def load_data(file_icy, file_dlc, drop = True, threshold = 0.5, scale = (4, 8)):
     '''
@@ -236,6 +236,11 @@ if __name__ == '__main__':
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
-    fig.savefig('output/lengths.png')
+    identifier = sys.argv[1].split('/')[-1].strip('.xml')
+    try:
+        fig.savefig('output/lengths_' + identifier + '.png')
+    except FileNotFoundError:
+        os.makedirs('output/')
+        fig.savefig('output/lengths_' + identifier + '.png')
     df = pd.DataFrame(lengths)
-    df.to_csv('output/lengths.csv', index=False)
+    df.to_csv('output/lengths_' + identifier + '.csv', index=False)
