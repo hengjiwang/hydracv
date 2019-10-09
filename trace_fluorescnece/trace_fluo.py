@@ -66,7 +66,7 @@ def plot(fluorescence_, fps=20, save=True, filename=None):
 
 if __name__ == "__main__":
     videoname = sys.argv[1] # 'videos/NGCaMP6_50X_20fps_M1-004.avi'
-    frames = load_video(videoname, False)
+    frames = load_video(videoname, True)
     fluorescence = trace(frames)
     filename = videoname.split('/')[-1].strip('.avi')
     plot(fluorescence, 20, True, filename)
