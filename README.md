@@ -1,8 +1,12 @@
 # Data Analysis Tools for *Hydra* Videos
 
 - [Data Analysis Tools for *Hydra* Videos](#data-analysis-tools-for-hydra-videos)
+  - [Dependencies](#dependencies)
   - [Find Midline](#find-midline)
   - [Trace Fluorescence](#trace-fluorescence)
+
+## Dependencies
+numpy, matplotlib, opencv-python, pandas
 
 ## Find Midline
 
