@@ -27,6 +27,10 @@ def load_video(video, display=True):
         else:
             break
 
+    # Find OpenCV version
+    (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+
+
     # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
@@ -69,5 +73,5 @@ if __name__ == "__main__":
     frames = load_video(videoname, False)
     fluorescence = trace(frames)
     filename = videoname.split('/')[-1].strip('.avi')
-    plot(fluorescence, 20, True, filename)
+    plot(fluorescence, int(sys.argv[2]), True, filename)
     

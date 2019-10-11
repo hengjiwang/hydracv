@@ -26,4 +26,6 @@ Integrate the fluorescence in each frame of a video and plot the trace.
 
 - Clone the repo
 - Enter the directory trace_fluorescence
-- Run `python trace_fluo.py path/of/video/file`
+- Run `python trace_fluo.py path/of/video/file fps`
+
+where fps is the fps(frames per second) of the video.
