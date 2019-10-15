@@ -14,9 +14,12 @@ Track the midline of *hydra* based on the contours data from [ICY](http://icy.bi
 
 - Clone this repo
 - Enter the directory find_midline/
-- Run `python midline.py path/of/icy/file path/of/deeplabcut/file max_of_depth`
+- Run `python midline.py path/of/icy/file path/of/deeplabcut/file max_of_depth scale_of_x scale_of_y`
 
-where the file from ICY should be .xml file, the file from DeepLabCut should be .csv file. max_of_depth is the depth of recursion when finding midline, based on which the program will generate $2^{\text{max\_of\_depth}}$ midpoints for drawing the midline. 
+where the file from ICY should be .xml file, the file from DeepLabCut should be .csv file. 
+- max_of_depth is the depth of recursion when finding midline, based on which the program will generate $2^{\text{max\_of\_depth}}$ midpoints for drawing the midline. 
+- scale_of_x is the compression ratio by ICY in x-direction
+- scale_of_y is the compression ratio by ICY in y-direction
 
 **Note:** The tracked parts of Hydra must be in the order of *hypostome, armpit1, armpit2 and peduncle*
 

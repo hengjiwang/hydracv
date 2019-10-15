@@ -173,9 +173,9 @@ def find_midline(seg1, seg2, max_depth, midpoints = [], sidepoints = [], depth =
 
 
 
-def main(file_icy, file_dlc, max_depth = 5):
+def main(file_icy, file_dlc, max_depth, scale):
     # Load data
-    contours, df, _ = load_data(file_icy, file_dlc)
+    contours, df, _ = load_data(file_icy, file_dlc, scale=scale)
 
     # Presettings
     lengths = []
@@ -222,9 +222,9 @@ def main(file_icy, file_dlc, max_depth = 5):
         plt.plot(markers['armpit2_x'], markers['armpit2_y'], 'bo')
         plt.plot(hyp_point, 'go')
         plt.plot(ped_point, 'ko')
-        plt.xlim(left = 150, right = 300)
-        plt.ylim(bottom = 50, top = 250)
-        plt.pause(0.001)
+        plt.xlim(0, 1000)
+        plt.ylim(0, 500)
+        plt.pause(0.0001)
 
     return lengths
 
@@ -232,7 +232,7 @@ def main(file_icy, file_dlc, max_depth = 5):
 if __name__ == '__main__':
     
     # lengths = main('../data/hy78clip1_R2.xml', '../data/hy78clip1DeepCut_resnet50_clip1Mar24shuffle1_124000.csv', max_depth = 5)
-    lengths = main(sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]))
+    lengths = main(sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), scale=(int(sys.argv[4], int(sys.argv[5]))))
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
