@@ -8,15 +8,6 @@ import cv2
 from multiprocessing import Pool
 from functools import partial
 
-def par_trace(pt, frame, poly):
-    # print(len(pt_frame))
-    if poly.contains(pt):
-        return frame[int(pt.y*2)][int(pt.x *2)]
-    else:
-        return 0.0
-
-
-
 
 def load_data(file_icy, file_dlc, drop = True, threshold = 0.5, scale = (2, 2)):
     '''
@@ -185,7 +176,8 @@ def find_midline(seg1, seg2, max_depth, midpoints = [], sidepoints = [], depth =
 
     return midpoints, sidepoints
 
-
+# make sure to adjust scale (it is the ratio of the
+# resolution of the video to the resolution used on icy to extract contour)
 def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
     '''
     :return: an array of the integration of fluorescence for each frame of the video
@@ -240,79 +232,64 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
         mid_x = [p[0] for p in midpoints]
         mid_y = [p[1] for p in midpoints]
 
+        # obtain the sidepoints used to calculate the midpoint
         side1_x = [p[0][0] for p in sidepoints]
         side1_y = [p[0][1] for p in sidepoints]
 
         side2_x = [p[1][0] for p in sidepoints]
         side2_y = [p[1][1] for p in sidepoints]
+        # reverse one side so the vertices are in cyclic order
         side2_x.reverse()
         side2_y.reverse()
 
+        # extract the percentage of the midline
+        # to be defined as peduncle
         polypoints_x = side1_x + side2_x + [ped_point[0]]
         polypoints_y = side1_y + side2_y + [ped_point[1]]
         length_points = len(polypoints_x)
         polypoints_x = polypoints_x[:int(length_points*0.2)] + polypoints_x[-int(length_points*0.2):]
         polypoints_y = polypoints_y[:int(length_points*0.2)] + polypoints_y[-int(length_points*0.2):]
 
-
+        # append to a single list as tuples (x, y)
         polypoints = []
+        # rescale the polygon vertices to the video size
         for x,y in zip(polypoints_x, polypoints_y):
-            polypoints.append((x,y))
+            polypoints.append((x*scale[0],y*scale[1]))
 
+        #  create polygon with Polygon function (easy to plot)
+        # display the video with the polygon superimposed to
+        # check that the peduncle is captured correnctly
         poly = Polygon(polypoints)
         plt.clf()
-        rframe = cv2.resize(frame, (640, 360))
-        plt.imshow(rframe)
+        plt.imshow(frame)
         plt.plot(*poly.exterior.xy)
-        # plt.scatter(side1_x, side1_y)
 
-        # plt.scatter(side2_x, side2_y)
-        # plt.scatter(side1_x[5], side1_y[5],c='r')
-        # plt.scatter(mid_x[5], mid_y[5])
-        # plt.scatter(side2_x[5], side2_y[5],c='r')
-
-        # plt.scatter(polypoints[0][0], polypoints[0][1])
         # plt.xlim(left = 0, right = 640)
         # plt.ylim(bottom = 0, top = 360)
-        # plt.pause(0.001)
+        plt.pause(0.001)
 
         if ret:
             if firstf:
                 size = len(frame) * len(frame[0])
+                # get the resolution of the video
                 r2,r1, _ignore = np.shape(frame)
-                print(r2,r1)
-                pt_list = []
-                # for i in range(r1):
-                #     for j in range(r2):
-                #         pt_list.append( Point((i/scale[0], j/scale[1])) )
                 firstf = False
 
             # Our operations on the frame come here
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             intensity = 0
+            # convert the vertices list to numpy array
             polypoints = np.array( [polypoints], dtype = np.int32)
-            # print(polypoints)
-            polypoints*=2
-            # print(polypoints)
+            # create an empty frame with same resolution as video
             cframe = np.zeros_like(frame)
+            # fill the polygon in the empty frame to create a mask
             cv2.fillPoly( cframe, polypoints, 255 )
+            # compare mask to video to extract sum of the intensity of
+            # pixels inside the polygon
             pts = np.where(cframe == 255)
             intensity = np.sum(frame[pts])
 
-            # input('press enter')
-            # intensity = np.sum(frame)
-            # for pt in pt_list:
-            #     pass
-                # np.sum(frame)
-                # if poly.contains(pt):
-                #     intensity += frame[int(pt.y*2)][int(pt.x *2)]
-                # else:
-                #     intensity += 0.0
-            # par_trace_pt = partial(par_trace, frame = frame, poly = poly)
-            # with Pool(9) as pl:
-            #     intensity += sum(pl.map(par_trace_pt, pt_list))
-            # intensity = np.sum(frame)
-
+            # normalize the intensity
             intensities_.append(intensity/size)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -338,8 +315,8 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
 
 if __name__ == '__main__':
 
-    # lengths = main('../data/hy78clip1_R2.xml', '../data/hy78clip1DeepCut_resnet50_clip1Mar24shuffle1_124000.csv', max_depth = 5)
-    lengths = pedunc_trace(sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), video=sys.argv[4])
+    # lengths = main('../data/hy78clip1_R2.xml', '../data/hy78clip1DeepCut_resnet50_clip1Mar24shuffle1_124000.csv', max_depth = 5, 'path to video file')
+    lengths = pedunc_trace(sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), video=sys.argv[6], scale=(int(sys.argv[4]), int(sys.argv[5])) )
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
