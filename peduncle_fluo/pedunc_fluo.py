@@ -55,11 +55,10 @@ def drop_bad_frames(df, threshold):
     :return: index of dropped frames
     '''
     inds = df.index.values
-    df_good = df[df['hypostome_likelihood'] > threshold]
-    df_good = df[df['armpit1_likelihood'] > threshold]
-    df_good = df[df['armpit2_likelihood'] > threshold]
-    df_good = df[df['peduncle_likelihood'] > threshold]
-    inds_good = df_good.index.values
+    inds_good = df[df['hypostome_likelihood'] > threshold].index.values
+    inds_good = np.intersect1d(inds_good, df[df['armpit1_likelihood'] > threshold].index.values, assume_unique = True)
+    inds_good = np.intersect1d(inds_good, df[df['armpit2_likelihood'] > threshold].index.values, assume_unique = True)
+    inds_good = np.intersect1d(inds_good, df[df['peduncle_likelihood'] > threshold].index.values, assume_unique = True)
 
     inds_bad = np.setdiff1d(inds, inds_good)
     df.iloc[inds_bad] = None
