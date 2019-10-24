@@ -289,7 +289,7 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
             intensity = np.sum(frame[pts])
 
             # normalize the intensity
-            intensities_.append(intensity/size)
+            intensities_.append(intensity)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -315,7 +315,7 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
 if __name__ == '__main__':
 
     # lengths = main('../data/hy78clip1_R2.xml', '../data/hy78clip1DeepCut_resnet50_clip1Mar24shuffle1_124000.csv', max_depth = 5, 'path to video file')
-    lengths = pedunc_trace(sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), video=sys.argv[6], scale=(int(sys.argv[4]), int(sys.argv[5])) )
+    lengths = pedunc_trace(sys.argv[1], sys.argv[2], video=sys.argv[3], max_depth = int(sys.argv[4]), scale=(int(sys.argv[5]), int(sys.argv[6])) )
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
