@@ -23,7 +23,7 @@ def trace(video, display=True):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             intensity = np.sum(frame)
 
-            intensities_.append(intensity/size)
+            intensities_.append(intensity)
 
             # Display the resulting frame
             if display:
@@ -50,18 +50,20 @@ def plot(fluorescence_, fps=20, save=True, filename=None):
     plt.xlabel('time/s')
     plt.ylabel('fluorescence')
     plt.show()
-    if save: 
+    if save:
         try:
             fig.savefig('figures/' + filename + '.png')
         except FileNotFoundError:
             os.makedirs('figures/')
             fig.savefig('figures/' + filename + '.png')
-        
+
         try:
-            np.savetxt('data/' + filename, fluorescence_)
+            df = pd.DataFrame(fluorescence_)
+            df.to_csv('data/total_fluo_' + filename + '.csv', index=False)
         except FileNotFoundError:
             os.makedirs('data/')
-            np.savetxt('data/' + filename, fluorescence_)
+            df = pd.DataFrame(fluorescence_)
+            df.to_csv('data/total_fluo_' + filename + '.csv', index=False)
     return
 
 
@@ -70,4 +72,3 @@ if __name__ == "__main__":
     intensities = trace(videoname, True)
     filename = videoname.split('/')[-1].strip('.avi')
     plot(intensities, int(sys.argv[2]), True, filename)
-    
