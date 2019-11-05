@@ -20,7 +20,7 @@ Track the midline of *hydra* based on the contours data from [ICY](http://icy.bi
 
 where the file from ICY should be .xml file, the file from DeepLabCut should be .csv file.
 
-- max_of_depth is the depth of recursion when finding midline, based on which the program will generate 2<sup>max\_of\_depth + 1</sup> - 1 midpoints for drawing the midline.
+- max_of_depth is the depth of recursion when finding midline, based on which the program will generate 2<sup>max\_of\_depth+1</sup>-1 midpoints for drawing the midline.
 
 - scale_of_x is the compression ratio by ICY in x-direction
 
