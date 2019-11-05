@@ -1,28 +1,3 @@
-<style TYPE="text/css">
-code.has-jax {font: inherit; font-size: 100%; background: inherit; border: inherit;}
-</style>
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-    tex2jax: {
-        inlineMath: [['$','$'], ['\\(','\\)']],
-        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] // removed 'code' entry
-    }
-});
-MathJax.Hub.Queue(function() {
-    var all = MathJax.Hub.getAllJax(), i;
-    for(i = 0; i < all.length; i += 1) {
-        all[i].SourceElement().parentNode.className += ' has-jax';
-    }
-});
-</script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS_HTML-full"></script>
-
-
-
-
-
-
-
 # Data Analysis Tools for *Hydra* Videos
 
 - [Data Analysis Tools for *Hydra* Videos](#data-analysis-tools-for-hydra-videos)
@@ -45,7 +20,7 @@ Track the midline of *hydra* based on the contours data from [ICY](http://icy.bi
 
 where the file from ICY should be .xml file, the file from DeepLabCut should be .csv file.
 
-- max_of_depth is the depth of recursion when finding midline, based on which the program will generate $ 2^{\text{depth - 1} - 1} $ midpoints for drawing the midline.
+- max_of_depth is the depth of recursion when finding midline, based on which the program will generate 2<sup>max\_of\_depth - 1</sup> - 1 midpoints for drawing the midline.
 
 - scale_of_x is the compression ratio by ICY in x-direction
 
