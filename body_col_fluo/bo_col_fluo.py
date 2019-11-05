@@ -5,11 +5,13 @@ import xml.etree.ElementTree as ET
 import sys, csv, os
 from shapely.geometry import Polygon, Point, MultiPoint
 # from hydra_data_analysis.find_midline.midline import *
+
 sys.path.append(os.path.join( os.path.dirname(os.path.realpath(__file__)), '../find_midline/'))
+
 from midline import *
 import cv2
 
-def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
+def bo_col_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
     '''
     :return: an array of the integration of fluorescence for each frame of the video
     :rtype: list
@@ -87,16 +89,23 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
         polypoints_y = side1_y + side2_y + [ped_point[1]]
         length_points = len(polypoints_x)
         # print(length_points)
-        # polypoints_x = polypoints_x[:int(length_points*0.2)+1] + polypoints_x[-int(length_points*0.2)-2:]
-        # polypoints_y = polypoints_y[:int(length_points*0.2)+1] + polypoints_y[-int(length_points*0.2)-2:]
+        # polypoints_x = polypoints_x[int(length_points*0.2) : len(side1_x)] + polypoints_x[-len(side2_x)-1 : -int(length_points*0.2)-1]
+        # polypoints_y = polypoints_y[int(length_points*0.2) : len(side1_y)] + polypoints_y[-len(side2_y)-1 : -int(length_points*0.2)-1]
 
         chk = np.where( np.array(seg1)[:,0] == polypoints_x[int(length_points*0.2)] )
+        chk_ = np.where( np.array(seg1)[:,0] == polypoints_x[len(side1_x)-1] )
+
         chk1 = np.where( np.array(seg2)[:,0] == polypoints_x[-int(length_points*0.2)-2] )
+        chk1_ = np.where( np.array(seg2)[:,0] == polypoints_x[-len(side2_x)-1] )
+
         seg1ind = int(chk[0][0])
+        seg1inde = int(chk_[0][0])
         seg2ind = int(chk1[0][0])
-        # print(type(np.array(seg1)[seg1ind:,0]))
-        polypoints_x = np.concatenate( ( np.array(seg1)[seg1ind:, 0] , np.flip(np.array(seg2)[seg2ind:, 0] ) ), axis = None )
-        polypoints_y = np.concatenate( ( np.array(seg1)[seg1ind:, 1] , np.flip(np.array(seg2)[seg2ind:, 1] ) ), axis = None )
+        seg2inde = int(chk1_[0][0])
+
+        # # print(type(np.array(seg1)[seg1ind:,0]))
+        polypoints_x = np.concatenate( ( np.array(seg1)[seg1inde:seg1ind+1, 0] , np.flip(np.array(seg2)[seg2inde:seg2ind+1, 0] ) ), axis = None )
+        polypoints_y = np.concatenate( ( np.array(seg1)[seg1inde:seg1ind+1, 1] , np.flip(np.array(seg2)[seg2inde:seg2ind+1, 1] ) ), axis = None )
 
         polypoints = []
         for x,y in zip(polypoints_x, polypoints_y):
@@ -105,7 +114,7 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
         # print(len(polypoints))
         # poly = Polygon(polypoints)
         plt.clf()
-        rframe = cv2.resize(frame, (int(r1/scale[0]), int(r2/scale[1]) ))
+        rframe = cv2.resize(frame, ( int(r1/scale[0]) , int(r2/scale[1]) ))
         plt.imshow(rframe)
 
 
@@ -138,6 +147,8 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
 
 
         if ret:
+
+
             # Our operations on the frame come here
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             intensity = 0
@@ -176,15 +187,15 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
 if __name__ == '__main__':
 
     # lengths = main('../data/hy78clip1_R2.xml', '../data/hy78clip1DeepCut_resnet50_clip1Mar24shuffle1_124000.csv', max_depth = 5)
-    lengths = pedunc_trace( sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), video=sys.argv[4], scale= ( int(sys.argv[5]), int(sys.argv[6]) ) )
+    lengths = bo_col_trace( sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), video=sys.argv[4], scale= ( int(sys.argv[5]), int(sys.argv[6]) ) )
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
     identifier = sys.argv[1].split('/')[-1].strip('.xml')
     try:
-        fig.savefig('output_con/pedunc_fluo_' + identifier + '.png')
+        fig.savefig('output_con/body_col_fluo_' + identifier + '.png')
     except FileNotFoundError:
         os.makedirs('output_con/')
-        fig.savefig('output_con/pedunc_fluo_' + identifier + '.png')
+        fig.savefig('output_con/body_col_fluo_' + identifier + '.png')
     df = pd.DataFrame(lengths)
-    df.to_csv('output_con/pedunc_fluo_' + identifier + '.csv', index=False)
+    df.to_csv('output_con/body_col_fluo_' + identifier + '.csv', index=False)
