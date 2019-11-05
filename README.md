@@ -5,6 +5,7 @@
   - [Find Midline](#find-midline)
   - [Trace Fluorescence](#trace-fluorescence)
   - [Peduncle Fluorescence](#peduncle-fluo)
+  - [Body Column Fluorescence](#body-col-fluo)
 
 ## Dependencies
 numpy, matplotlib, opencv-python, pandas
@@ -19,7 +20,7 @@ Track the midline of *hydra* based on the contours data from [ICY](http://icy.bi
 
 where the file from ICY should be .xml file, the file from DeepLabCut should be .csv file.
 
-- max_of_depth is the depth of recursion when finding midline, based on which the program will generate $2^{\text{max\_of\_depth}}$ midpoints for drawing the midline.
+- max_of_depth is the depth of recursion when finding midline, based on which the program will generate 2<sup>max\_of\_depth+1</sup>-1 midpoints for drawing the midline.
 
 - scale_of_x is the compression ratio by ICY in x-direction
 
@@ -43,5 +44,18 @@ Using the Midline integrate the fluorescence in the peduncle of the Hydra.
 
 - Clone the repo
 - Enter the directory peduncle_fluo/
-- Run `python pedunc_fluo.py path/of/icy/file path/of/DeepLabCut/file max_depth scale_of_x scale_of_y /path/of/video`
-- The argument to the code are the same as midline.py, the path to the video being used is also added
+- Run `python pedunc_fluo_contour.py path/of/icy/file path/of/DeepLabCut/file max_depth /path/of/video scale_of_x scale_of_y`
+- The arguments to the script are the same as midline.py, the path to the video being used is added
+
+**Note:** This code requires the midline.py script in the same relative path as present in the repo.
+
+## Body Column Fluorescence
+
+Using the Midline find the fluorescence in the body column of the Hydra.
+
+- Clone the repo
+- Enter the directory peduncle_fluo/
+- Run `python bo_col_fluo.py path/of/icy/file path/of/DeepLabCut/file max_depth /path/of/video scale_of_x scale_of_y`
+- The arguments to the script are the same as the ones used in Peduncle Fluorescence
+
+**Note:** This code requires the midline.py script in the same relative path as present in the repo
