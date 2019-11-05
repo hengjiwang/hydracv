@@ -54,7 +54,7 @@ Using the Midline integrate the fluorescence in the peduncle of the Hydra.
 Using the Midline find the fluorescence in the body column of the Hydra.
 
 - Clone the repo
-- Enter the directory peduncle_fluo/
+- Enter the directory body_col\_fluo/
 - Run `python bo_col_fluo.py path/of/icy/file path/of/DeepLabCut/file max_depth /path/of/video scale_of_x scale_of_y`
 - The arguments to the script are the same as the ones used in Peduncle Fluorescence
 
