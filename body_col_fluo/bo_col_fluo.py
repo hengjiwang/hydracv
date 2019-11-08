@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import xml.etree.ElementTree as ET
 import sys, csv, os
-from shapely.geometry import Polygon, Point, MultiPoint
+# from shapely.geometry import Polygon, Point, MultiPoint
 # from hydra_data_analysis.find_midline.midline import *
 
 sys.path.append(os.path.join( os.path.dirname(os.path.realpath(__file__)), '../find_midline/'))
