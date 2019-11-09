@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import xml.etree.ElementTree as ET
-import sys, csv, os, re
+import sys, csv, os, re, cv2
 
 from midline import *
 
@@ -68,7 +68,36 @@ def divide_contour(markers, contour):
 
     return seg1, seg2
 
-def main(file_icy, file_dlc, max_depth, scale):
+def sort_midpoints(markers, midpoints, sidepoints, hyp_point, ped_point):
+    # Sort midpoints based on the distances with the peduncle point
+    dist_with_ped = [length_segment([p, ped_point]) for p in midpoints]
+    indexs = np.argsort(dist_with_ped)
+    midpoints = np.array(midpoints)[indexs]
+    np.append(midpoints, hyp_point)
+    sidepoints = np.array(sidepoints)[indexs]
+    return midpoints, sidepoints
+
+def draw(contour, midpoints, hyp_point, ped_point):
+    # Extract coordinates lists
+    contour_x = [p[0] for p in contour]
+    contour_y = [p[1] for p in contour]
+    mid_x = [p[0] for p in midpoints]
+    mid_y = [p[1] for p in midpoints]
+
+    # Draw
+    plt.clf()
+    plt.scatter(contour_x, contour_y, color = '', marker = 'o', edgecolors= 'g')
+    plt.plot(mid_x, mid_y, 'r.-')
+    plt.plot([hyp_point[0], mid_x[-1]], [hyp_point[1], mid_y[-1]], 'r-')
+    plt.plot([ped_point[0], mid_x[0]], [ped_point[1], mid_y[0]], 'r-')
+    plt.plot(hyp_point[0],hyp_point[1], color='orange', marker='o')
+    plt.plot(ped_point[0],ped_point[1], color= 'purple', marker = 'o')
+    plt.xlim(0, 1000)
+    plt.ylim(0, 500)
+    plt.pause(0.0001)
+
+
+def run(file_icy, file_dlc, max_depth, scale):
 
     contours, df, _ = load_data(file_icy, file_dlc, scale=scale)
 
@@ -90,43 +119,26 @@ def main(file_icy, file_dlc, max_depth, scale):
         # Get midpoints
         seg1, seg2 = divide_contour(markers, contour)
         midpoints, sidepoints = find_midline(seg1, seg2, max_depth, midpoints = [], sidepoints = [])
-
-        # Sort midpoints based on the distances with the peduncle point
+        
+        # Sort midpoints and sidepoints
         ped_point = (markers['peduncle_x'], markers['peduncle_y'])
         hyp_point = (markers['hypostome_x'],markers['hypostome_y'])
-        dist_with_ped = [length_segment([p, ped_point]) for p in midpoints]
-        indexs = np.argsort(dist_with_ped)
-        midpoints = np.array(midpoints)[indexs]
-        np.append(midpoints, hyp_point)
-        sidepoints = np.array(sidepoints)[indexs]
+        midpoints, sidepoints = sort_midpoints(markers, midpoints, 
+            sidepoints, hyp_point, ped_point)
 
         # Append length of midline
         lengths.append(length_segment(midpoints))
 
-        # Extract coordinates lists
-        contour_x = [p[0] for p in contour]
-        contour_y = [p[1] for p in contour]
-        mid_x = [p[0] for p in midpoints]
-        mid_y = [p[1] for p in midpoints]
-
         # Draw
-        plt.clf()
-        plt.scatter(contour_x, contour_y, color = '', marker = 'o', edgecolors= 'g')
-        plt.plot(mid_x, mid_y, 'r.-')
-        plt.plot([hyp_point[0], mid_x[-1]], [hyp_point[1], mid_y[-1]], 'r-')
-        plt.plot([ped_point[0], mid_x[0]], [ped_point[1], mid_y[0]], 'r-')
-        plt.plot(hyp_point[0],hyp_point[1], color='orange', marker='o')
-        plt.plot(ped_point[0],ped_point[1], color= 'purple', marker = 'o')
-        plt.xlim(0, 1000)
-        plt.ylim(0, 500)
-        plt.pause(0.0001)
+        draw(contour, midpoints, hyp_point, ped_point)
+        
 
     return lengths
 
 
 if __name__ == "__main__":
     # lengths = main('../data/hy78clip1_R2.xml', '../data/hy78clip1DeepCut_resnet50_clip1Mar24shuffle1_124000.csv', max_depth = 5)
-    lengths = main(sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), scale=(int(sys.argv[4]), int(sys.argv[5])) )
+    lengths = run(sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), scale=(int(sys.argv[4]), int(sys.argv[5])) )
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
