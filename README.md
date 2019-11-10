@@ -3,30 +3,45 @@
 - [Data Analysis Tools for *Hydra* Videos](#data-analysis-tools-for-hydra-videos)
   - [Dependencies](#dependencies)
   - [Find Midline](#find-midline)
+    - [Full Body](#full-body)
+    - [Peduncle Half](#peduncle-half)
   - [Trace Fluorescence](#trace-fluorescence)
-  - [Peduncle Fluorescence](#peduncle-fluo)
-  - [Body Column Fluorescence](#body-col-fluo)
+  - [Peduncle Fluorescence](#peduncle-fluorescence)
+  - [Body Column Fluorescence](#body-column-fluorescence)
 
 ## Dependencies
-numpy, matplotlib, opencv-python, pandas
+numpy, matplotlib, opencv-python, pandas, tqdm
 
 ## Find Midline
 
+### Full Body
+
 Track the midline of *hydra* based on the contours data from [ICY](http://icy.bioimageanalysis.org/) and coordinates of some tracked points from [DeepLabCut](https://github.com/AlexEMG/DeepLabCut). Measure the length of the midline for each frame and save it as a csv file.
+
+**Steps:**
 
 - Clone this repo
 - Enter the directory find_midline/
-- Run `python midline.py path/of/icy/file path/of/deeplabcut/file max_of_depth scale_of_x scale_of_y`
+- Modify config.json
+- Run `python midline.py`
 
-where the file from ICY should be .xml file, the file from DeepLabCut should be .csv file.
+**Parameters in config.json:**
 
-- max_of_depth is the depth of recursion when finding midline, based on which the program will generate 2<sup>max\_of\_depth+1</sup>-1 midpoints for drawing the midline.
+- _IcyFilePath_: Path of the .xml file from ICY
 
-- scale_of_x is the compression ratio by ICY in x-direction
+- _DeeplabcutFilePath_: Path of the .csv file from DeepLabCut
+  
+- _MaxDepth_: The depth of recursion when finding midline, based on which the program will generate 2<sup>max\_of\_depth+1</sup>-1 midpoints for drawing the midline.
 
-- scale_of_y is the compression ratio by ICY in y-direction
+- _ScaleX_: the compression ratio by ICY in x-direction
 
-**Note:** The tracked parts of Hydra must be in the order of *hypostome, armpit1, armpit2 and peduncle*
+- _ScaleY_: is the compression ratio by ICY in y-direction
+
+**_Note_:** The tracked parts of Hydra must be in the order of *hypostome, armpit1, armpit2 and peduncle*
+
+### Peduncle Half
+
+The same as [Full Body](#full-body) except for the last step should be Run `python midline_ped.py`
 
 ## Trace Fluorescence
 

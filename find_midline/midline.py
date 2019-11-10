@@ -251,8 +251,11 @@ def main(file_icy, file_dlc, max_depth, scale):
 
 if __name__ == '__main__':
 
-    # lengths = main('../data/hy78clip1_R2.xml', '../data/hy78clip1DeepCut_resnet50_clip1Mar24shuffle1_124000.csv', max_depth = 5)
-    lengths = main(sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), scale=(int(sys.argv[4]), int(sys.argv[5])) )
+    df = pd.read_json('config.json')
+    lengths = main(df.IcyFilePath.values[0], 
+                df.DeeplabcutFilePath.values[0], 
+                df.MaxDepth.values[0], 
+                scale=(df.ScaleX.values[0], df.ScaleY.values[0]))
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
