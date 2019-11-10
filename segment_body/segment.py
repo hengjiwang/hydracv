@@ -143,7 +143,7 @@ def run(file_icy, file_dlc, max_depth, scale, videopath):
 
 if __name__ == "__main__":
     df = pd.read_json('config.json')
-    lengths = main(df.IcyFilePath.values[0], 
+    lengths = run(df.IcyFilePath.values[0], 
                 df.DeeplabcutFilePath.values[0], 
                 df.MaxDepth.values[0], 
                 (df.ScaleX.values[0], df.ScaleY.values[0]),
