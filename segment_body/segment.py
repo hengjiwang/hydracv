@@ -103,7 +103,8 @@ def run(file_icy, file_dlc, max_depth, scale, videopath):
             sidepoints, hyp_point, ped_point)
 
         # Append length of midline
-        lengths.append(length_segment(midpoints))
+        length = length_segment(midpoints)
+        lengths.append(length)
 
         # Interpolate midpoints
         midpoints = interpolate_midpoints(midpoints)
