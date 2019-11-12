@@ -23,16 +23,17 @@ def draw(contour, midpoints, hyp_point, ped_point, spots, map_points, seg1_point
     plt.plot(hyp_point[0],hyp_point[1], color='orange', marker='o')
     plt.plot(ped_point[0],ped_point[1], color= 'purple', marker = 'o')
     for j in range(len(spots)):
+        # plt.plot([spots[j][0], mappoints[])
         plt.plot([seg1_points[j][0], seg2_points[j][0]], 
         [seg1_points[j][1], seg2_points[j][1]], 'b-')
         plt.scatter(spots[j][0], spots[j][1], color="purple")
-        plt.scatter(map_points[j][0], map_points[j][1], color='black')
+        plt.scatter(map_points[j][0], map_points[j][1], color='white')
 
     plt.xlim(0, 1000)
     plt.ylim(0, 500)
     plt.pause(0.0001)
 
-def interpolate_midpoints(midpoints, num=20):
+def interpolate_midpoints(midpoints, num):
     # Interpolate midpoints
 
     new_midpoints = []
@@ -60,7 +61,7 @@ def add_normal_lines():
 
 
 
-def run(file_icy, file_dlc, max_depth, scale, videopath):
+def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_num):
 
     contours, df, _ = load_data(file_icy, file_dlc, scale=scale)
 
@@ -72,6 +73,8 @@ def run(file_icy, file_dlc, max_depth, scale, videopath):
 
     # Loop over all frames
     for iframe in range(num_frames):
+
+        print(iframe)
 
         markers = df.iloc[iframe]
         contour = contours[iframe]
@@ -107,7 +110,7 @@ def run(file_icy, file_dlc, max_depth, scale, videopath):
         lengths.append(length)
 
         # Interpolate midpoints
-        midpoints = interpolate_midpoints(midpoints)
+        midpoints = interpolate_midpoints(midpoints, interpolate_num)
 
         # Find mapped points of spots on midline
         map_points = []
@@ -148,7 +151,8 @@ if __name__ == "__main__":
                 df.DeeplabcutFilePath.values[0], 
                 df.MaxDepth.values[0], 
                 (df.ScaleX.values[0], df.ScaleY.values[0]),
-                df.VideoPath.values[0])
+                df.VideoPath.values[0], 
+                df.InterpolateNum.values[0])
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
