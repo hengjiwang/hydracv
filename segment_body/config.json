@@ -1,0 +1,8 @@
+[{
+    "IcyFilePath": "data/peduncle_0hour_40x_4fps_ex3_002.xml",
+    "DeeplabcutFilePath": "data/peduncle_0hour_40x_4fps_ex3DLC_resnet50_VIVIAN_Hydra1Nov5shuffle1_1030000.csv",
+    "MaxDepth": 3,
+    "ScaleX": 1,
+    "ScaleY": 1,
+    "VideoPath": "../data/videos/peduncle_0hour_40x_4fps_ex3.avi"
+}]
