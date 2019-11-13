@@ -2,11 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import xml.etree.ElementTree as ET
-import sys, csv, os, re
+import sys, csv, os, re, cv2
 sys.path.insert(0, '../find_midline/')
 from midline_ped import *
+from tqdm import tqdm
 
-def draw(contour, midpoints, hyp_point, ped_point, spots, map_points, seg1_points, seg2_points, frame, scale):
+def draw(contour, midpoints, hyp_point, ped_point, spots, map_points, seg1_points, seg2_points, frame, scale, project_name, iframe):
     # Extract coordinates lists
     contour_x = [p[0] for p in contour]
     contour_y = [p[1] for p in contour]
@@ -17,30 +18,38 @@ def draw(contour, midpoints, hyp_point, ped_point, spots, map_points, seg1_point
     plt.clf()
     plt.imshow(frame)
     plt.scatter(contour_x, contour_y, color = '', marker = 'o', edgecolors= 'g')
-    plt.plot(mid_x, mid_y, 'r.-')
+    plt.plot(mid_x, mid_y, 'r-')
     plt.plot([hyp_point[0], mid_x[-1]], [hyp_point[1], mid_y[-1]], 'r-')
     plt.plot([ped_point[0], mid_x[0]], [ped_point[1], mid_y[0]], 'r-')
-    plt.plot(hyp_point[0],hyp_point[1], color='orange', marker='o')
+    plt.plot(hyp_point[0],hyp_point[1], color='purple', marker='o')
     plt.plot(ped_point[0],ped_point[1], color= 'purple', marker = 'o')
     for j in range(len(spots)):
         # plt.plot([spots[j][0], mappoints[])
         plt.plot([seg1_points[j][0], seg2_points[j][0]], 
         [seg1_points[j][1], seg2_points[j][1]], 'b-')
-        plt.scatter(spots[j][0], spots[j][1], color="purple")
-        plt.scatter(map_points[j][0], map_points[j][1], color='white')
+        plt.scatter(spots[j][0], spots[j][1], color="orange")
 
-    plt.xlim(0, 1000)
-    plt.ylim(0, 500)
+    plt.xlim(0, 544)
+    plt.ylim(0, 440)
+    plt.xticks([])
+    plt.yticks([])
     plt.pause(0.0001)
 
-def interpolate_midpoints(midpoints, num):
-    # Interpolate midpoints
+    try:
+        plt.savefig('save/animations/' + project_name + '/frames/img' + str(iframe) + '.jpg', bbox_inches='tight')
+    except FileNotFoundError:
+        os.makedirs('save/animations/' + project_name + '/frames/')
+        os.makedirs('save/animations/' + project_name + '/movie/')
+        plt.savefig('save/animations/' + project_name + '/frames/img' + str(iframe) + '.jpg', bbox_inches='tight')
+
+def interpolate(points, num):
+    # Interpolate points
 
     new_midpoints = []
     
-    for i in range(len(midpoints)-1):
-        this_point = midpoints[i]
-        next_point = midpoints[i+1]
+    for i in range(len(points)-1):
+        this_point = points[i]
+        next_point = points[i+1]
 
         x = np.linspace(this_point[0], next_point[0], num)
         y = np.linspace(this_point[1], next_point[1], num)
@@ -48,7 +57,7 @@ def interpolate_midpoints(midpoints, num):
         for j in range(len(x)-1):
             new_midpoints.append([x[j], y[j]])
 
-    new_midpoints.append(midpoints[-1])
+    new_midpoints.append(points[-1])
 
     return new_midpoints
 
@@ -59,9 +68,7 @@ def slope(p1, p2):
 def add_normal_lines():
     pass
 
-
-
-def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_num):
+def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_midline_num, interpolate_contour_num, project_name):
 
     contours, df, _ = load_data(file_icy, file_dlc, scale=scale)
 
@@ -72,13 +79,13 @@ def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_num):
     cap = cv2.VideoCapture(videopath)
 
     # Loop over all frames
-    for iframe in range(num_frames):
-
-        print(iframe)
+    for iframe in tqdm(range(num_frames)):
 
         markers = df.iloc[iframe]
         contour = contours[iframe]
         ret, frame = cap.read()
+
+        contour = interpolate(contour, interpolate_contour_num)
 
         # Pass dropped frames
         if np.isnan(markers[0]):
@@ -110,7 +117,7 @@ def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_num):
         lengths.append(length)
 
         # Interpolate midpoints
-        midpoints = interpolate_midpoints(midpoints, interpolate_num)
+        midpoints = interpolate(midpoints, interpolate_midline_num)
 
         # Find mapped points of spots on midline
         map_points = []
@@ -141,7 +148,7 @@ def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_num):
             seg2_points.append(min_p2)
 
         # Draw
-        draw(contour, midpoints, hyp_point, ped_point, spots, map_points, seg1_points, seg2_points, frame, scale)
+        draw(contour, midpoints, hyp_point, ped_point, spots, map_points, seg1_points, seg2_points, frame, scale, project_name, iframe)
 
     return lengths
 
@@ -152,7 +159,9 @@ if __name__ == "__main__":
                 df.MaxDepth.values[0], 
                 (df.ScaleX.values[0], df.ScaleY.values[0]),
                 df.VideoPath.values[0], 
-                df.InterpolateNum.values[0])
+                df.InterpolateMidlineNum.values[0],
+                df.InterpolateContourNum.values[0],
+                df.Name.values[0])
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
