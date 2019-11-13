@@ -1,9 +1,11 @@
 [{
+    "Name": "peduncle_0hour_40x_4fps_ex3",
     "IcyFilePath": "../data/icy-contours/peduncle_0hour_40x_4fps_ex3_002.xml",
     "DeeplabcutFilePath": "../data/deeplabcut-data/peduncle_0hour_40x_4fps_ex3DeepCut_resnet50_VIVIAN_Hydra1Nov5shuffle1_1030000.csv",
-    "MaxDepth": 5,
+    "MaxDepth": 3,
     "ScaleX": 1,
     "ScaleY": 1,
     "VideoPath": "../data/videos/peduncle_0hour_40x_4fps_ex3.avi",
-    "InterpolateNum": 200
+    "InterpolateMidlineNum": 10000,
+    "InterpolateContourNum": 10
 }]
