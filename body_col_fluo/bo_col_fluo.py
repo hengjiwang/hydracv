@@ -186,8 +186,13 @@ def bo_col_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
 
 if __name__ == '__main__':
 
+    df = pd.read_json('../segment_body/config.json')
+    lengths = bo_col_trace(df.IcyFilePath.values[0],
+                df.DeeplabcutFilePath.values[0],
+                df.MaxDepth.values[0], df.VideoPath.values[0],
+                (df.ScaleX.values[0], df.ScaleY.values[0]))
     # lengths = main('../data/hy78clip1_R2.xml', '../data/hy78clip1DeepCut_resnet50_clip1Mar24shuffle1_124000.csv', max_depth = 5)
-    lengths = bo_col_trace( sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), video=sys.argv[4], scale= ( int(sys.argv[5]), int(sys.argv[6]) ) )
+    # lengths = bo_col_trace( sys.argv[1], sys.argv[2], max_depth = int(sys.argv[3]), video=sys.argv[4], scale= ( int(sys.argv[5]), int(sys.argv[6]) ) )
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
