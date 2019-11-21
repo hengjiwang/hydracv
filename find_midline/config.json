@@ -1,6 +1,6 @@
 [{
-    "IcyFilePath": "/home/hengji/Documents/hydra_data_analysis/find_midline/data/peduncle_0hour_40x_4fps_ex3_002.xml",
-    "DeeplabcutFilePath": "/home/hengji/Documents/hydra_data_analysis/find_midline/data/peduncle_0hour_40x_4fps_ex3DLC_resnet50_VIVIAN_Hydra1Nov5shuffle1_1030000.csv",
+    "IcyFilePath": "/home/shashank/Downloads/icy_xml/peduncle_0hour_40x_4fps_ex3_002.xml",
+    "DeeplabcutFilePath": "/home/shashank/Desktop/peduncle_0hr_1/VIVIAN_Hydra1-VIVIAN-2019-11-05/videos/peduncle_0hour_40x_4fps_ex3DeepCut_resnet50_VIVIAN_Hydra1Nov5shuffle1_1030000.csv",
     "MaxDepth": 3,
     "ScaleX": 1,
     "ScaleY": 1

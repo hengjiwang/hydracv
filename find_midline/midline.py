@@ -4,6 +4,27 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 import sys, csv, os
 
+def load_contour_j(file_icy):
+    root = ET.parse(file_icy).getroot()
+    rois = root.findall('roi')
+    contours = []
+    for i in range(len(rois)):
+        contours.append(0)
+
+    for roi in rois:
+        id = int(roi.find('t').text)
+        points = roi.find('points').findall('point')
+        contour = []
+        for point in points:
+            pos_x = float(point.find('pos_x').text)
+            pos_y = float(point.find('pos_y').text)
+            contour.append((pos_x, pos_y))
+        try:
+            contours[id] = contour
+        except:
+            print(id)
+    return contours
+
 def load_contour(file_icy):
     # Extract coordinates from file_icy
     root = ET.parse(file_icy).getroot()
@@ -39,8 +60,11 @@ def load_data(file_icy, file_dlc, drop = True, threshold = 0.5, scale = (2, 2)):
     :return: coordinates of contour, coordinates of tracked points, index of bad frames
     :rtype: list, pandas.core.frame.DataFrame, numpy.array
     '''
-
-    contours = load_contour(file_icy)
+    try:
+        contours = load_contour(file_icy)
+    except:
+        print('loading')
+        contours = load_contour_j(file_icy)
     df = load_tracked_points(file_dlc)
 
     # Scale coordinates
@@ -231,6 +255,7 @@ def main(file_icy, file_dlc, max_depth, scale):
         mid_y = [p[1] for p in midpoints]
 
         # Draw
+        print(iframe)
         plt.clf()
         plt.scatter(contour_x, contour_y, color = '', marker = 'o', edgecolors= 'g')
         plt.plot(mid_x, mid_y, 'r.-')
@@ -252,14 +277,14 @@ def main(file_icy, file_dlc, max_depth, scale):
 if __name__ == '__main__':
 
     df = pd.read_json('config.json')
-    lengths = main(df.IcyFilePath.values[0], 
-                df.DeeplabcutFilePath.values[0], 
-                df.MaxDepth.values[0], 
+    lengths = main(df.IcyFilePath.values[0],
+                df.DeeplabcutFilePath.values[0],
+                df.MaxDepth.values[0],
                 scale=(df.ScaleX.values[0], df.ScaleY.values[0]))
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
-    identifier = sys.argv[1].split('/')[-1].strip('.xml')
+    identifier = df.IcyFilePath.values[0].split('/')[-1].strip('.xml')
     try:
         fig.savefig('output/lengths_' + identifier + '.png')
     except FileNotFoundError:
