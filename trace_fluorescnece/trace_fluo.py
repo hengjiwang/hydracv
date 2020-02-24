@@ -13,9 +13,11 @@ def trace(video, display=True):
     intensities_ = []
     cap = cv2.VideoCapture(video)
     firstf = True
+    iframe = 0
     while True:
         # Capture frame-by-frame
         ret, frame = cap.read()
+
         if ret:
             if firstf:
                 size = len(frame) * len(frame[0])
@@ -33,6 +35,8 @@ def trace(video, display=True):
                 break
         else:
             break
+
+        iframe += 1
 
     # Find OpenCV version
     (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
@@ -70,6 +74,6 @@ def plot(fluorescence_, fps=20, save=True, filename=None):
 
 if __name__ == "__main__":
     videoname = sys.argv[1] # 'videos/NGCaMP6_50X_20fps_M1-004.avi'
-    intensities = trace(videoname, True)
+    intensities = trace(videoname)
     filename = videoname.split('/')[-1].strip('.avi')
     plot(intensities, int(sys.argv[2]), True, filename)

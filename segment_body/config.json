@@ -1,11 +1,11 @@
 [{
     "Name": "peduncle_0hour_40x_4fps_ex3",
-    "IcyFilePath": "../data/icy-contours/peduncle_0hour_40x_4fps_ex3_002.xml",
-    "DeeplabcutFilePath": "../data/deeplabcut-data/peduncle_0hour_40x_4fps_ex3DeepCut_resnet50_VIVIAN_Hydra1Nov5shuffle1_1030000.csv",
+    "IcyFilePath": "/home/shashank/Downloads/icy_xml/NGCaMP6_50X_20fps_M1_001_R1.xml",
+    "DeeplabcutFilePath": "/home/shashank/Downloads/DeepLabCut/examples/NGCaMP-shashank-2019-10-11/videos/NGCaMP6_50X_20fps_M1DLC_resnet50_NGCaMPOct11shuffle1_132000.csv",
     "MaxDepth": 3,
-    "ScaleX": 1,
-    "ScaleY": 1,
-    "VideoPath": "../data/videos/peduncle_0hour_40x_4fps_ex3.avi",
-    "InterpolateMidlineNum": 10000,
+    "ScaleX": 2,
+    "ScaleY": 2,
+    "VideoPath": "/media/shashank/ca8bb318-124a-438f-8196-8b1003f38f03/Hydra_Videos/neural_data/NGCaMP6_50X_20fps_M1.avi",
+    "InterpolateMidlineNum": 10,
     "InterpolateContourNum": 10
 }]

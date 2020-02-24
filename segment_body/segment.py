@@ -25,7 +25,7 @@ def draw(contour, midpoints, hyp_point, ped_point, spots, map_points, seg1_point
     plt.plot(ped_point[0],ped_point[1], color= 'purple', marker = 'o')
     for j in range(len(spots)):
         # plt.plot([spots[j][0], mappoints[])
-        plt.plot([seg1_points[j][0], seg2_points[j][0]], 
+        plt.plot([seg1_points[j][0], seg2_points[j][0]],
         [seg1_points[j][1], seg2_points[j][1]], 'b-')
         plt.scatter(spots[j][0], spots[j][1], color="orange")
 
@@ -46,7 +46,7 @@ def interpolate(points, num):
     # Interpolate points
 
     new_midpoints = []
-    
+
     for i in range(len(points)-1):
         this_point = points[i]
         next_point = points[i+1]
@@ -94,7 +94,7 @@ def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_midline_num
         # Get midpoints
         seg1, seg2 = divide_contour(markers, contour)
         midpoints, sidepoints = find_midline(seg1, seg2, max_depth, midpoints = [], sidepoints = [])
-        
+
         # Tracked points
         xs = []
         ys = []
@@ -109,7 +109,7 @@ def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_midline_num
         hyp_point = (markers['hypostome_x'],markers['hypostome_y'])
 
         # Sort midpoints and sidepoints
-        midpoints, sidepoints = sort_midpoints(markers, midpoints, 
+        midpoints, sidepoints = sort_midpoints(markers, midpoints,
             sidepoints, hyp_point, ped_point)
 
         # Append length of midline
@@ -154,11 +154,11 @@ def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_midline_num
 
 if __name__ == "__main__":
     df = pd.read_json('config.json')
-    lengths = run(df.IcyFilePath.values[0], 
-                df.DeeplabcutFilePath.values[0], 
-                df.MaxDepth.values[0], 
+    lengths = run(df.IcyFilePath.values[0],
+                df.DeeplabcutFilePath.values[0],
+                df.MaxDepth.values[0],
                 (df.ScaleX.values[0], df.ScaleY.values[0]),
-                df.VideoPath.values[0], 
+                df.VideoPath.values[0],
                 df.InterpolateMidlineNum.values[0],
                 df.InterpolateContourNum.values[0],
                 df.Name.values[0])
