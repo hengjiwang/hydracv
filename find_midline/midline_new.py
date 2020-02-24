@@ -92,7 +92,27 @@ def drop_bad_frames(df, threshold):
 
     return inds_bad
 
-def locate_point(marker, contour):
+def armpit_line(armpit1, armpit2):
+
+    try:
+        slope = (armpit2[1] - armpit1[1])/(armpit2[0] - armpit1[0])
+        const = (slope*armpit1[0]*-1)  + armpit1[1]
+    except ZeroDivisionError:
+        slope = np.inf
+        const = np.inf
+
+    return slope, const
+
+def same_side_of_line(slope, const, hypostome, pt):
+    if hypostome == None or slope == np.inf:
+        return 1
+    s1 = np.sign(hypostome[1] - slope*hypostome[0] - const)
+    s2 = np.sign(pt[1] - slope*pt[0] - const)
+    if(s1 == s2):
+        return 0
+    return 1
+
+def locate_point(marker, contour, hypostome = None, slope = None, const = None):
     '''
     Locate the corresponding index of the marker on contour
     :return: int; index of marker
@@ -101,7 +121,8 @@ def locate_point(marker, contour):
     mindist = np.inf
     for j in range(len(contour)):
         dist = (marker[0] - contour[j][0])**2 + (marker[1] - contour[j][1])**2
-        if dist < mindist:
+        s = same_side_of_line(slope, const, hypostome, contour[j])
+        if dist < mindist and s:
             mindist = dist
             index = j
 
@@ -113,9 +134,16 @@ def divide_contour(markers, contour):
     :return: (list, list); two segments from the contour
     '''
     # Find the corresponding positions of the tracked points on contour
-    ind_arm1 = locate_point((markers['armpit1_x'], markers['armpit1_y']), contour)
-    ind_arm2 = locate_point((markers['armpit2_x'], markers['armpit2_y']), contour)
     ind_ped = locate_point((markers['peduncle_x'], markers['peduncle_y']), contour)
+
+    try:
+        hypostome = ( markers['hypostome_x'], markers['hypostome_y'] )
+    except:
+        hypostome = None
+    slope, const = armpit_line((markers['armpit1_x'], markers['armpit1_y']), (markers['armpit2_x'], markers['armpit2_y']))
+    ind_arm1 = locate_point((markers['armpit1_x'], markers['armpit1_y']), contour, hypostome, slope, const)
+    ind_arm2 = locate_point((markers['armpit2_x'], markers['armpit2_y']), contour, hypostome, slope, const)
+
 
     # Divide the contour into two segments joint at ind_ped
     # marker_hypostome = (markers['hypostome_x'], markers['hypostome_y'])
@@ -252,6 +280,7 @@ def main(file_icy, file_dlc, max_depth, scale):
         if np.isnan(markers[0]):
             lengths.append(lengths[-1])
             dropped_frames.append(iframe)
+            midpoints_all.append(midpoints_all[-1])
             continue
 
         # Get midpoints
@@ -261,11 +290,14 @@ def main(file_icy, file_dlc, max_depth, scale):
         except:
             lengths.append(lengths[-1])
             dropped_frames.append(iframe)
+            midpoints_all.append(midpoints_all[-1])
             continue
 
         # Sort midpoints based on the distances with the peduncle point
-        ped_point = (markers['peduncle_x'], markers['peduncle_y'])
+        ind_ped = locate_point((markers['peduncle_x'], markers['peduncle_y']), contour)
+        ped_point = (contour[ind_ped][0], contour[ind_ped][1])
         hyp_point = ((markers['armpit1_x']+markers['armpit2_x'])/2, (markers['armpit1_y']+markers['armpit2_y'])/2)
+        hypostome_point = (markers['hypostome_x'], markers['hypostome_y'])
 
         # print(len(midpoints), len(sidepoints))
         re_midpoints=[]
@@ -286,6 +318,10 @@ def main(file_icy, file_dlc, max_depth, scale):
         # Extract coordinates lists
         contour_x = [p[0] for p in contour]
         contour_y = [p[1] for p in contour]
+
+        seg1_x = [p[0] for p in seg1]
+        seg1_y = [p[1] for p in seg1]
+
         mid_x = [p[0] for p in midpoints]
         mid_y = [p[1] for p in midpoints]
 
@@ -293,6 +329,7 @@ def main(file_icy, file_dlc, max_depth, scale):
         # print(iframe)
         plt.clf()
         plt.scatter(contour_x, contour_y, color = '', marker = 'o', edgecolors= 'g')
+        plt.scatter(hypostome_point[0], hypostome_point[1], color='k', marker='o')
         plt.plot(mid_x, mid_y, 'r.-')
         plt.plot([markers['armpit1_x'],hyp_point[0]], [markers['armpit1_y'],hyp_point[1]], 'go-')
         plt.plot([markers['armpit2_x'],hyp_point[0]], [markers['armpit2_y'],hyp_point[1]], 'go-')
@@ -306,8 +343,8 @@ def main(file_icy, file_dlc, max_depth, scale):
         plt.ylim(0, 500)
         plt.pause(0.0001)
 
-        if(iframe == 3800):
-            input('Press Enter')
+        # if(iframe > 1600):
+        #     input('Press Enter')
 
 
     return lengths, dropped_frames, midpoints_all

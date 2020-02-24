@@ -1,6 +1,6 @@
 [{
-    "IcyFilePath": "/home/shashank/Downloads/icy_xml/peduncle_0hour_40x_4fps_ex3_002.xml",
-    "DeeplabcutFilePath": "/home/shashank/Desktop/peduncle_0hr_1/VIVIAN_Hydra1-VIVIAN-2019-11-05/videos/peduncle_0hour_40x_4fps_ex3DeepCut_resnet50_VIVIAN_Hydra1Nov5shuffle1_1030000.csv",
+    "IcyFilePath": "/home/shashank/Downloads/icy_xml/john-long-cycles_grayscale.xml",
+    "DeeplabcutFilePath": "/home/shashank/Downloads/DeepLabCut/examples/GRCaMP-shashank-2020-02-21/videos/john-long-cyclesDLC_resnet50_GRCaMPFeb21shuffle1_1030000.csv",
     "MaxDepth": 3,
     "ScaleX": 1,
     "ScaleY": 1

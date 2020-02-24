@@ -12,15 +12,17 @@ from scipy.ndimage import gaussian_filter1d
 
 def find_inter(tr_pt, midpoints, seg1, seg2):
 
+    # Start iterating from the nearest end of the segment
     if(length_segment([tr_pt, seg1[0]]) > length_segment( [tr_pt, seg1[-1]] )):
         seg1.reverse()
 
     if(length_segment([tr_pt, seg2[0]]) > length_segment( [tr_pt, seg2[-1]] )):
         seg2.reverse()
 
-    print(type(seg1))
-    print(type(seg2))
+    # print(type(seg1))
+    # print(type(seg2))
 
+    # Obtain the midpoints that are used for interpolation (The closest two midpoints to the tracked point)
     md1 = np.inf
     md2 = np.inf
     for pt in midpoints:
@@ -33,6 +35,7 @@ def find_inter(tr_pt, midpoints, seg1, seg2):
                 md2 = d
                 cp2 = pt
 
+    # Find the slope and obtain the normal
     sl = slope(cp1, cp2)
 
     psl = -(1/sl)
@@ -43,6 +46,7 @@ def find_inter(tr_pt, midpoints, seg1, seg2):
     npt[0] = (tr_pt[0] + sl*sl*cp1[0] + sl*tr_pt[1] - sl*cp1[1] ) / (sl*sl + 1)
     npt[1] = sl*(npt[0] - cp1[0]) + cp1[1]
 
+    # Obtain the points on the contour to interpolate
     # print(npt)
     s = np.sign( (seg1[0][0]-npt[0])*(tr_pt[1]-npt[1]) -  (seg1[0][1]-npt[1])*(tr_pt[0]-npt[0]) )
 
@@ -68,6 +72,7 @@ def find_inter(tr_pt, midpoints, seg1, seg2):
             break
         cpt1seg2 = pt
 
+    # Find the point on the contour using the points found above
     ncpt1 = np.array([0,0], 'float')
     ncpt2 = np.array([0,0], 'float')
 
@@ -151,6 +156,7 @@ def run(file_icy, file_dlc, max_depth, scale, videopath, interpolate_midline_num
 
     contours, df, _ = load_data(file_icy, file_dlc, scale=scale)
 
+    # Gaussian smooth the tracked points
     cname = df.columns.values
     for nm in cname:
         if( re.search('likelihood', nm) or re.search('bodyparts', nm)):
