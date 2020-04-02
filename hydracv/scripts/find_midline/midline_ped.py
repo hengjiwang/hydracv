@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import xml.etree.ElementTree as ET
 import sys, csv, os, re, cv2
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from midline import *
+from find_midline.midline import *
 
 def load_tracked_points(file_dlc):
     df = pd.read_csv(file_dlc)

@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import xml.etree.ElementTree as ET
 import sys, csv, os, re, cv2
-sys.path.insert(0, '../find_midline/')
-from midline_ped import *
+import sys,os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from find_midline.midline_ped import *
 from tqdm import tqdm
 
 def draw(contour, midpoints, hyp_point, ped_point, spots, map_points, seg1_points, seg2_points, frame, scale, project_name, iframe):
