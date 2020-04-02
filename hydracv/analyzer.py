@@ -484,6 +484,15 @@ class Analyzer:
 
         return list2d
 
+    def delete_video(self, name):
+        """Delete a video with name from the Analyzer object"""
+
+        if name not in self._videos:
+            raise NameError(name + " is not added!")
+
+        del self._videos[name]
+        
+
 
         
 
