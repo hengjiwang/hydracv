@@ -339,8 +339,8 @@ def main(file_icy, file_dlc, max_depth, scale):
         plt.plot(markers['armpit2_x'], markers['armpit2_y'], 'bo')
         plt.plot(hyp_point[0],hyp_point[1], color='orange', marker='o')
         plt.plot(ped_point[0],ped_point[1], color= 'purple', marker = 'o')
-        plt.xlim(0, 1000)
-        plt.ylim(0, 500)
+        plt.xlim(0, 2000)
+        plt.ylim(0, 2000)
         plt.pause(0.0001)
 
         # if(iframe > 1600):

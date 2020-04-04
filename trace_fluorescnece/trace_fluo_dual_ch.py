@@ -18,7 +18,7 @@ def trace(video):
             if firstf:
                 size = len(frame) * len(frame[0])
                 firstf = False
-                
+
             # Our operations on the frame come here
 
             frame_red = frame[:,:,2]
@@ -40,6 +40,7 @@ def trace(video):
         else:
             break
 
+    print(len(intensities_red), len(intensities_green))
     # Find OpenCV version
     (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
 
@@ -55,17 +56,36 @@ if __name__ == "__main__":
     # videoname = sys.argv[1] # 'videos/NGCaMP6_50X_20fps_M1-004.avi'
 
     image_formats = ['.mov']
-    # for (root, dirs, files) in os.walk('/media/hengji/DATA/Data/Documents/szymanski_videos/'): 
-    root = "" 
-    for filename in ['/home/hengji/Downloads/john-long-cycles.mov']:
+    # for (root, dirs, files) in os.walk('/media/hengji/DATA/Data/Documents/szymanski_videos/'):
+    root = ""
+    for filename in ['/home/shashank/Downloads/john-long-cycles.mov']:
         if os.path.splitext(filename)[1] in image_formats:
 
             intensities_red, intensities_green = trace(os.path.join(root,filename))
+
+            vidname = os.path.basename(filename)
+
+            try:
+                df = pd.DataFrame(intensities_red)
+                df.to_csv('data/red_fluo_' + vidname + '.csv', index=False)
+            except FileNotFoundError:
+                os.makedirs('data/')
+                df = pd.DataFrame(intensities_red)
+                df.to_csv('data/red_fluo_' + vidname + '.csv', index=False)
+            df = pd.DataFrame(intensities_green)
+            df.to_csv('data/green_fluo_' + vidname + '.csv', index=False)
+
             plt.figure()
             plt.plot(intensities_red, 'r')
             plt.plot(intensities_green, 'g')
             plt.xlabel('frames')
             plt.ylabel('Fluorescence[a.u.]')
-            plt.savefig(os.path.join(root,os.path.splitext(filename)[0])+'.png')
-            plt.show()
 
+            try:
+                plt.savefig('figures/' + vidname + '.png')
+            except FileNotFoundError:
+                os.makedirs('figures/')
+                plt.savefig('figures/' + vidname + '.png')
+
+
+            plt.show()
