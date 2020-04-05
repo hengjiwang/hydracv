@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import xml.etree.ElementTree as ET
@@ -258,7 +259,7 @@ def closest_pt_array(pt, midpoints, sidepoints, re_midpoints=[], re_sidepoints=[
 
     return closest_pt_array(pt, midpoints, sidepoints, re_midpoints, re_sidepoints)
 
-def main(file_icy, file_dlc, max_depth, scale):
+def main(file_icy, file_dlc, max_depth, scale, display=False):
     # Load data
     contours, df, _ = load_data(file_icy, file_dlc, scale=scale)
 
@@ -327,21 +328,23 @@ def main(file_icy, file_dlc, max_depth, scale):
 
         # Draw
         # print(iframe)
-        plt.clf()
-        plt.scatter(contour_x, contour_y, color = '', marker = 'o', edgecolors= 'g')
-        plt.scatter(hypostome_point[0], hypostome_point[1], color='k', marker='o')
-        plt.plot(mid_x, mid_y, 'r.-')
-        plt.plot([markers['armpit1_x'],hyp_point[0]], [markers['armpit1_y'],hyp_point[1]], 'go-')
-        plt.plot([markers['armpit2_x'],hyp_point[0]], [markers['armpit2_y'],hyp_point[1]], 'go-')
-        plt.plot([hyp_point[0], mid_x[-1]], [hyp_point[1], mid_y[-1]], 'r-')
-        plt.plot([ped_point[0], mid_x[0]], [ped_point[1], mid_y[0]], 'r-')
-        plt.plot(markers['armpit1_x'], markers['armpit1_y'], 'bo')
-        plt.plot(markers['armpit2_x'], markers['armpit2_y'], 'bo')
-        plt.plot(hyp_point[0],hyp_point[1], color='orange', marker='o')
-        plt.plot(ped_point[0],ped_point[1], color= 'purple', marker = 'o')
-        plt.xlim(0, 2000)
-        plt.ylim(0, 2000)
-        plt.pause(0.0001)
+        if(display):
+            matplotlib.use('Qt5Agg')
+            plt.clf()
+            plt.scatter(contour_x, contour_y, color = '', marker = 'o', edgecolors= 'g')
+            plt.scatter(hypostome_point[0], hypostome_point[1], color='k', marker='o')
+            plt.plot(mid_x, mid_y, 'r.-')
+            plt.plot([markers['armpit1_x'],hyp_point[0]], [markers['armpit1_y'],hyp_point[1]], 'go-')
+            plt.plot([markers['armpit2_x'],hyp_point[0]], [markers['armpit2_y'],hyp_point[1]], 'go-')
+            plt.plot([hyp_point[0], mid_x[-1]], [hyp_point[1], mid_y[-1]], 'r-')
+            plt.plot([ped_point[0], mid_x[0]], [ped_point[1], mid_y[0]], 'r-')
+            plt.plot(markers['armpit1_x'], markers['armpit1_y'], 'bo')
+            plt.plot(markers['armpit2_x'], markers['armpit2_y'], 'bo')
+            plt.plot(hyp_point[0],hyp_point[1], color='orange', marker='o')
+            plt.plot(ped_point[0],ped_point[1], color= 'purple', marker = 'o')
+            plt.xlim(0, 600)
+            plt.ylim(0, 600)
+            plt.pause(0.0001)
 
         # if(iframe > 1600):
         #     input('Press Enter')
@@ -356,7 +359,7 @@ if __name__ == '__main__':
     lengths, dropped_frames, midpoints_all = main(df.IcyFilePath.values[0],
                 df.DeeplabcutFilePath.values[0],
                 df.MaxDepth.values[0],
-                scale=(df.ScaleX.values[0], df.ScaleY.values[0]))
+                scale=(df.ScaleX.values[0], df.ScaleY.values[0]), display=True)
 
     fig = plt.figure()
     plt.plot(lengths)
