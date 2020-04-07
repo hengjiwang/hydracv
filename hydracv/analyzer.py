@@ -491,6 +491,17 @@ class Analyzer:
             raise NameError(name + " is not added!")
 
         del self._videos[name]
+
+
+    ###################################
+
+    def find_midline(self):
+        """"""
+        raise NotImplementedError()
+
+    def plot_fluo_midline_overlay(self):
+        """"""
+        raise NotImplementedError()
         
 
 
