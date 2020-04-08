@@ -3,9 +3,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import xml.etree.ElementTree as ET
 import sys, csv, os, re, cv2
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from find_midline.midline import *
+from tqdm import tqdm
+from midline import *
 
 def load_tracked_points(file_dlc):
     df = pd.read_csv(file_dlc)
@@ -101,52 +100,57 @@ def draw(contour, midpoints, hyp_point, ped_point):
 def run(file_icy, file_dlc, max_depth, scale):
 
     contours, df, _ = load_data(file_icy, file_dlc, scale=scale)
-
+    midpoints_all = []
     # Presettings
     lengths = []
+    dropped_frames = []
     num_frames = len(contours)
     plt.figure(figsize=(20,20))
 
     # Loop over all frames
-    for iframe in range(num_frames):
+    for iframe in tqdm(range(num_frames)):
 
         markers = df.iloc[iframe]
         contour = contours[iframe]
 
         # Pass dropped frames
         if np.isnan(markers[0]):
+            lengths.append(lengths[-1])
+            dropped_frames.append(iframe)
+            midpoints_all.append(midpoints_all[-1])
             continue
 
         # Get midpoints
         seg1, seg2 = divide_contour(markers, contour)
         midpoints, sidepoints = find_midline(seg1, seg2, max_depth, midpoints = [], sidepoints = [])
-        
+
         # Sort midpoints and sidepoints
         ped_point = (markers['peduncle_x'], markers['peduncle_y'])
         hyp_point = (markers['hypostome_x'],markers['hypostome_y'])
-        midpoints, sidepoints = sort_midpoints(markers, midpoints, 
+        midpoints, sidepoints = sort_midpoints(markers, midpoints,
             sidepoints, hyp_point, ped_point)
 
         # Append length of midline
         lengths.append(length_segment(midpoints))
 
+        midpoints_all.append(midpoints)
         # Draw
         draw(contour, midpoints, hyp_point, ped_point)
-        
 
-    return lengths
+
+    return lengths, dropped_frames, midpoints_all
 
 
 if __name__ == "__main__":
     df = pd.read_json('config.json')
-    lengths = run(df.IcyFilePath.values[0], 
-                df.DeeplabcutFilePath.values[0], 
-                df.MaxDepth.values[0], 
+    lengths, dropped_frames, midpoints_all = run(df.IcyFilePath.values[0],
+                df.DeeplabcutFilePath.values[0],
+                df.MaxDepth.values[0],
                 scale=(df.ScaleX.values[0], df.ScaleY.values[0]))
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
-    identifier = sys.argv[1].split('/')[-1].strip('.xml')
+    identifier = df.IcyFilePath.values[0].split('/')[-1].strip('.xml')
     try:
         fig.savefig('output/lengths_' + identifier + '.png')
     except FileNotFoundError:
@@ -154,8 +158,16 @@ if __name__ == "__main__":
         fig.savefig('output/lengths_' + identifier + '.png')
     df = pd.DataFrame(lengths)
     df.to_csv('output/lengths_' + identifier + '.csv', index=False)
+    df = pd.DataFrame(dropped_frames)
+    df.to_csv('output/dropped_frames_' + identifier + '.csv', index=False)
 
+    mpt_df = []
+    for mpt in midpoints_all:
+        flat_list = []
+        for x,y in mpt:
+            flat_list.append(x)
+            flat_list.append(y)
+        mpt_df.append(flat_list)
 
-
-
-    
+    df = pd.DataFrame(mpt_df)
+    df.to_csv('/home/shashank/Desktop/midpoints.csv', index = False)

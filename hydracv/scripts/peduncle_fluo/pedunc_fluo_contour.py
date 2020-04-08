@@ -24,6 +24,7 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
     cap = cv2.VideoCapture(video)
 
     firstf = True
+    # print(firstf)
     iframe = 0
     while True:
 
@@ -108,9 +109,6 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
         rframe = cv2.resize(frame, (int(r1/scale[0]), int(r2/scale[1]) ))
         plt.imshow(rframe)
 
-
-        # plt.plot([polypoints[3][0],polypoints[4][0]],[polypoints[3][1],polypoints[4][1]], 'b-')
-        # plt.plot(*poly.exterior.xy, )
         plt.fill(polypoints_x, polypoints_y, alpha = 0.5)
 
         plt.scatter(np.array(seg1)[:,0], np.array(seg1)[:,1], color = '', marker = 'o', edgecolors= 'g')
@@ -132,7 +130,7 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (2.0, 2.0)):
 
         # plt.scatter(np.array(seg2)[70:,0], np.array(seg2)[70:,1], marker = 'o', color='midnightblue')
         # plt.scatter(np.array(seg1)[35:,0], np.array(seg1)[35:,1], marker = 'o', color='midnightblue')
-        # input('press enter')
+        input('press enter')
         plt.pause(0.001)
         # plt.savefig('/home/shashank/Downloads/movfig_cont/fig'+str(iframe) +'.png')
 
