@@ -108,6 +108,10 @@ class Analyzer:
             """Set the video's fluorescence peak clusters"""
             self._peak_clusters = pk_clstrs
 
+        def num_pk_clstrs(self):
+            """Returns the number of peak clusters"""
+            return len(self._peak_clusters)
+
 
     def __init__(self):
         """Constructor"""
@@ -657,6 +661,7 @@ class Analyzer:
         ax = fig.add_subplot(1, 1, 1)
 
         disp.add_spike_trains(ax, self._spike_trains, self._fps)
+        disp.add_color_stripes(ax, self._videos, len(self._spike_trains))
 
         plt.show()
 
