@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal
 from hydracv.scripts.find_midline import midline_new
+from hydracv.scripts.peduncle_fluo import pedunc_fluo_contour
 
 import hydracv.disp as disp
 
@@ -36,6 +37,7 @@ class Analyzer:
             self._peaks = []
             self._midline_len = []
             self._midpoints_pos = []
+            self.ped_flu = []
 
         def name(self):
             """Get the name of the video"""
@@ -77,8 +79,12 @@ class Analyzer:
             self._fluo_trace = trace
 
         def midline_len(self):
-            """Get the midline lengths of the vide"""
+            """Get the midline lengths of the video"""
             return self._midline_len
+
+        def ped_flu(self):
+            """Get the peduncle fluorescence of the video"""
+            return self._ped_flu
 
         def peaks(self):
             """Get the fluorescence peaks of the video"""
@@ -408,6 +414,103 @@ class Analyzer:
                 time_axis = np.linspace(0, video.numframes()/video.fps(), video.numframes())
                 ax.plot(time_axis, video.midline_len())
         plt.show()
+
+    def _peduncle_fluos(self, name, scale=(1,1), max_depth=3, plot = False, display=False):
+        """Obtain the midline length of the video with the given name.
+
+        Obtain the peduncle fluorescence from the video with the given name, and
+        set it as the  _ped_flu.
+
+        Args:
+            name: A list of names of target videos. Default as None. If set as
+                None, this function traces all added videos.
+            scale: Tuple of ratios of resolution of the contour extracted and the video
+            max_depth: Parameter deciding the number of midpoints to be produced (2^(max_depth+1)-1) midpoints generated
+            plot:  Whether to plot the fluorescence of each frame? Default value is False.
+            display: Whether to display contours ? Default as False.
+        """
+
+        video = self._video(name)
+        name, ext = name.split('.')
+
+        contour_path = video._path + name + '.xml'
+        if not os.path.isfile(contour_path):
+            raise FileNotFoundError("Icy contour file not found: " + contour_path)
+
+        dlc_path = video._path + name + '.csv'
+        if not os.path.isfile(dlc_path):
+            raise FileNotFoundError("DeepLabCut data file not found: " + dlc_path)
+        ped_flu = pedunc_fluo_contour.pedunc_trace(contour_path, dlc_path,
+                    max_depth, video._path + name + '.' + ext, scale, display)
+
+        video._ped_flu = ped_flu
+
+        if(plot):
+            self.plot_midline_len(name+'.'+ext)
+
+    def peduncle_fluos(self, name=None, scale=None, max_depth=3, plot = False, display=False):
+        """Obtain the peduncle fluorescences of the videos in name.
+
+        Args:
+            name: A list of names of target videos. Default as None. If set as
+                None, this function traces all added videos.
+            scale: Tuple of ratios of resolution of the contour extracted and the video
+            max_depth: Parameter deciding the number of midpoints to be produced (2^(max_depth+1)-1) midpoints generated
+            plot:  Whether to plot the trace? Default value is False.
+            display: Whether to display contours ? Default as False.
+        Raises:
+            TypeError: An error occurred if name is neither a list nor a string.
+        """
+        if name is None:
+            name = self._video_names()
+
+        if scale is None:
+            scale = (1,1)
+
+        if type(name) != list:
+            if type(name) == str:
+                self._ped_flu(name, scale, max_depth, plot, display)
+            else:
+                raise(TypeError("name can only be list or string!"))
+        else:
+            for nm in name:
+                self._peduncle_fluos(nm, scale, max_depth, plot, display)
+
+    def plot_peduncle_fluo(self, name=None):
+
+        """Plot the Peduncle fluorescence of the video with given name.
+
+        Args:
+            name: A list of names of target videos. Default as None. If set as
+                None, this function plots the midline lengths of all added videos.
+        Raises:
+            TypeError: An error occurred if name is neither a list nor a string.
+        """
+
+        if name is None:
+            name = self._video_names()
+
+        if type(name) != list:
+            if type(name) == str:
+                fig = plt.figure(figsize=(20,5))
+                video = self._videos[name]
+                ax = fig.add_subplot(1, 1, 1)
+                time_axis = np.linspace(0, video.numframes()/video.fps(), video.numframes())
+                ax.plot(time_axis, video.ped_flu())
+            else:
+                raise(TypeError("name can only be list or string!"))
+
+        else:
+            nvideos = len(name)
+
+            fig = plt.figure(figsize=(20,5*nvideos))
+            for j in range(nvideos):
+                video = self._videos[name[j]]
+                ax = fig.add_subplot(nvideos, 1, j+1)
+                time_axis = np.linspace(0, video.numframes()/video.fps(), video.numframes())
+                ax.plot(time_axis, video.ped_flu())
+        plt.show()
+
 
     def _find_peaks_for_single(self, name, plot=True, height=0.1, wlen=100,
                    prominence=0.025, min_cb_interval=10):
