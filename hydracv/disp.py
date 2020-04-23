@@ -51,3 +51,4 @@ def add_color_stripes(ax, videos, total_num):
     for video in videos.values():
         ax.axvspan(xmin=0, xmax=70, ymin=count/total_num, ymax=(count+video.num_pk_clstrs())/total_num, alpha=0.1, color=random_color())
         count += video.num_pk_clstrs()
+

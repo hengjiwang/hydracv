@@ -705,3 +705,20 @@ class Analyzer:
             raise NameError(name + " is not added!")
 
         del self._videos[name]
+        
+
+
+        
+
+
+
+
+
+
+        
+
+
+
+
+        
+
