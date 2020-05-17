@@ -5,7 +5,13 @@ def add_fluorescence(ax, time_axis, fluo):
     """Add a plot of fluo to ax"""
     ax.plot(time_axis, fluo, 'g-')
     ax.set_xlabel("time(s)")
-    ax.set_ylabel("fluorescence(a.u.)")
+    ax.set_ylabel("fluorescence (a.u.)")
+
+def add_midline_len(ax, time_axis, midline_len):
+    """Add a plot of midline length to ax"""
+    ax.plot(time_axis, midline_len, "b-")
+    ax.set_xlabel("time(s)")
+    ax.set_ylabel("midline length (pixels)")
 
 def add_peaks(ax, pks, fluo, fps):
     """Add pks on fluo"""

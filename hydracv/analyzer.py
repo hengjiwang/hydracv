@@ -6,6 +6,7 @@ from collections import defaultdict
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 import scipy.signal
 from hydracv.scripts.find_midline import midline_new
 
@@ -125,15 +126,35 @@ class Analyzer:
             FileNotFoundError: An error occurred if the video file is not found
         """
 
-        if not os.path.isfile(pn):
+        if not os.path.exists(pn):
             raise FileNotFoundError("File not found: " + pn)
 
+        # try:
+        #     f = open(pn)
+        # except IOError:
+        #     print("File " + pn + " not found. Do you want to add a virtual video? [y/n]" )
+        #     while True:
+        #         x = input()
+        #         if x in ["n", "no", "N", "No"]:
+        #             print("File " + pn + " is not added. ")
+        #             return
+        #         elif x in ["y", "yes", "Y", "Yes"]:
+        #             self._add_virtual_video(pn, fps)
+        #             return
+        #         else:
+        #             print("Please answer y/n:")
+        # f.close()
+        
         path, name = pn.rsplit('/', 1)
         path += '/'
 
         # Judege whether the video has already been added
         if name in self._videos:
-            return
+            if path == self._videos[name].path():
+                return
+            else:
+                self._videos[name]._path = path
+                return
 
         # Count the number of frames of the video
         cap = cv2.VideoCapture(pn)
@@ -142,6 +163,11 @@ class Analyzer:
         # Add the video to the Hash Map
         video = self._Video(name, path, fps, numframes)
         self._videos[name] = video
+
+    # def _add_virtual_video(self, name, fps):
+    #     """Add a virtual video which doesn't exist in the local machine"""
+    #     video = self._Video(name, "", fps, -1)
+    #     self._videos[name] = video
 
     def add_videos(self, pathname, fps=None):
         """Add a list of videos to the analyzer.
@@ -350,7 +376,7 @@ class Analyzer:
         if(plot):
             self.plot_midline_len(name+'.'+ext)
 
-    def find_midline(self, name=None, scale=None, max_depth=3, plot = False, display=False):
+    def find_midline(self, name=None, scale=None, max_depth=3, plot=False, display=False):
         """Obtain the midline lengths of the videos in name.
 
         Args:
@@ -602,6 +628,77 @@ class Analyzer:
             raise NameError(name + " is not added!")
 
         del self._videos[name]
+
+    def plot_fluos_and_midline_lens(self, name=None):
+        """Plot the fluorescence trace overlayed with midline lengths of the videos with given name.
+
+        Args:
+            name: A list of names of target videos. Default as None. If set as
+                None, this function plots all added videos.
+        Raises:
+            TypeError: An error occurred if name is neither a list nor a string.
+        """
+
+        if name is None:
+            name = self._video_names()
+
+        if type(name) != list:
+            if type(name) == str:
+                fig = plt.figure(figsize=(20,5))
+                video = self._videos[name]
+
+                # Add fluo plots
+                ax = fig.add_subplot(1, 1, 1)
+                time_axis = np.linspace(0, video.numframes()/video.fps(), video.numframes())
+                disp.add_fluorescence(ax, time_axis, video.fluo_trace())
+                
+                # Add midline plots
+                ax2 = ax.twinx()
+                disp.add_midline_len(ax2, time_axis, video.midline_len)
+
+            else:
+                raise(TypeError("name can only be list or string!"))
+
+        else:
+            nvideos = len(name)
+
+            fig = plt.figure(figsize=(20, 5*nvideos))
+            for j in range(nvideos):
+                video = self._videos[name[j]]
+                ax = fig.add_subplot(nvideos, 1, j+1)
+                time_axis = np.linspace(0, video.numframes()/video.fps(), video.numframes())
+                disp.add_fluorescence(ax, time_axis, video.fluo_trace())
+                ax2 = ax.twinx()
+                disp.add_midline_len(ax2, time_axis, video._midline_len())
+        plt.show()
+
+    def _add_midline_len(self, videoname, filepath):
+        """Add the tracked midline length located at filepath to the video with videoname"""
+        midline_len = list(pd.read_csv(filepath).values)
+        self._videos[videoname].midline_len = midline_len
+
+    def add_midline_lens(self, videoname=None, filepath=None):
+        """Add tracked midline lengths located at filepath to the videos with videoname"""
+        if videoname is None:
+            videoname = self._video_names()
+
+        if type(videoname) != list:
+            if type(videoname) == str:
+                self._add_midline_len(videoname, filepath)
+            else:
+                raise(TypeError("name can only be list or string!"))
+        else:
+            if len(videoname) != len(filepath):
+                raise ValueError("Length of videos and midline files not match! ")
+            for j in range(len(videoname)):
+                self._add_midline_len(videoname[j], filepath[j])
+
+        
+
+
+
+
+
         
 
 
