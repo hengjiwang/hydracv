@@ -1,6 +1,6 @@
 [{
-    "IcyFilePath": "/home/shashank/Downloads/icy_xml/Peduncle_0hour_50x_4fps_exp4/Peduncle_0hour_50x_4fps_exp4.xml",
-    "DeeplabcutFilePath": "/home/shashank/Downloads/DeepLabCut/examples/peduncle-shashank-2020-02-28/videos/Peduncle_0hour_50x_4fps_exp4_001DLC_resnet50_peduncleFeb28shuffle1_671000.csv",
+    "IcyFilePath": "/home/shashank/Downloads/icy_xml/0hr_Cafree+EGTA_ngcampmov_30x4fps_50%intensity_exp2_a1.xml",
+    "DeeplabcutFilePath": "/home/shashank/Downloads/dlc_data/0hr_Cafree+EGTA_ngcampmov_30x4fps_50%intensity_exp2_a1_001DLC_resnet50_CaFree+EGTAFeb24shuffle1_596000.csv",
     "MaxDepth": 3,
     "ScaleX": 1,
     "ScaleY": 1
