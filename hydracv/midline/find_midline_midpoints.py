@@ -155,9 +155,9 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
         #     plt.text(pt[0], pt[1], str(j), color='g', fontsize=5)
 
         # for pt in contour_half_1:
-        #     plt.plot(pt[0], pt[1], 'g.', markersize=5)
+        #     plt.plot(pt[0], pt[1], 'go', markerfacecolor='none', markersize=5)
         # for pt in contour_half_2:
-        #     plt.plot(pt[0], pt[1], 'g.', markersize=5)
+        #     plt.plot(pt[0], pt[1], 'go', markerfacecolor='none', markersize=5)
 
         # plt.plot(contour[ind_arp1][0], contour[ind_arp1][1], 'y.', markersize=20)
         # plt.plot(contour[ind_arp2][0], contour[ind_arp2][1], 'y.', markersize=20)
@@ -191,10 +191,10 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
 
             seg_pt_1 = contour_half_1[ind_seg_pt1]
             seg_pt_2 = contour_half_2[ind_seg_pt2]
-            # plt.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'purple')
+            # plt.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r')
             midpoint = ((seg_pt_1[0] + seg_pt_2[0]) // 2, (seg_pt_1[1] + seg_pt_2[1]) // 2)
             midpoints.append(midpoint)
-            # plt.plot(midpoint[0], midpoint[1], 'r.')
+            # plt.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
         
         # plt.xlim(0, 500)
         # plt.ylim(0, 500)

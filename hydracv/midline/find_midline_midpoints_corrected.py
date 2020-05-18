@@ -84,10 +84,14 @@ def length_segment(seg):
 
     return length
 
+def middle_point(pt1, pt2):
+    "Returns the midpoint of pt1 and pt2"
+    return ((pt1[0] + pt2[0]) / 2, (pt1[1] + pt2[1]) / 2)
+
 def angle(x, y, z):
     return np.arccos((x**2 + y**2 - z**2) / (2 * x * y))
 
-def find_midpoints(seg1, seg2, midpoints, nseg):
+def find_midpoints(seg1, seg2, midpoints, nseg, ax):
     "Find the midpoints of seg1 and seg2"
     len_contour_1 = length_segment(seg1)
     len_contour_2 = length_segment(seg2)
@@ -111,7 +115,12 @@ def find_midpoints(seg1, seg2, midpoints, nseg):
 
         seg_pt_1 = seg1[ind_seg_pt1]
         seg_pt_2 = seg2[ind_seg_pt2]
+
         midpoint = ((seg_pt_1[0] + seg_pt_2[0]) // 2, (seg_pt_1[1] + seg_pt_2[1]) // 2)
+
+        ax.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r-')
+        ax.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
+
         midpoints.append(midpoint)
 
 def find_midline(file_contour, file_marker, file_behaviors, nseg=40):
@@ -126,9 +135,13 @@ def find_midline(file_contour, file_marker, file_behaviors, nseg=40):
     midpoints_all = []
 
     iframe = 0
-    plt.figure()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
     for iframe in tqdm(range(len(contours))):
+
+        ax.clear()
 
         # Extract contour and marker
         contour = contours[iframe]
@@ -173,7 +186,6 @@ def find_midline(file_contour, file_marker, file_behaviors, nseg=40):
 
         pt_mid_1 = contour_half_1[ind_mid_1]
         ind_mid_2 = locate_point(pt_mid_1, contour_half_2)
-        pt_mid_2 = contour_half_2[ind_mid_2]
 
         # criteria = angle(length_segment([pt_mid_2, pt_mid_1]),
         #                  length_segment([pt_mid_1, marker['peduncle']]),
@@ -190,9 +202,7 @@ def find_midline(file_contour, file_marker, file_behaviors, nseg=40):
                 cum_len_2 += length_segment(contour_half_2[ind_mid_2:ind_mid_2+2])
                 ind_mid_2 += 1
 
-        # ind_mid_2 = max(ind_mid_2_, ind_mid_2)
-
-
+        pt_mid_2 = contour_half_2[ind_mid_2]
 
         # Separate half contours based on the middle points
         contour_half_11 = contour_half_1[:ind_mid_1]
@@ -200,34 +210,36 @@ def find_midline(file_contour, file_marker, file_behaviors, nseg=40):
         contour_half_21 = contour_half_2[:ind_mid_2]
         contour_half_22 = contour_half_2[ind_mid_2:]
 
-        # if iframe > 1800:
-
-        #     plt.clf()
-
-        #     for pt in contour_half_11:
-        #         plt.plot(pt[0], pt[1], 'g.', markersize=5)
-        #     for pt in contour_half_12:
-        #         plt.plot(pt[0], pt[1], 'k.', markersize=5)
-
-        #     for pt in contour_half_21:
-        #         plt.plot(pt[0], pt[1], 'b.', markersize=5)
-        #     for pt in contour_half_22:
-        #         plt.plot(pt[0], pt[1], 'k.', markersize=5)
-
-        #     # plt.plot(pt_mid_1[0], pt_mid_1[1], 'ro')
-        #     plt.plot(pt_mid_2[0], pt_mid_2[1], 'ro')
-        #     # plt.plot(contour_half_2[ind_mid_2_][0], contour_half_2[ind_mid_2_][1], 'yo')
-
-        #     plt.xlim(0, 500)
-        #     plt.ylim(0, 500)
-        #     plt.pause(0.00001)
-
         # Find the midpoints
         midpoints = []
-        find_midpoints(contour_half_11, contour_half_21, midpoints, nseg//2)
-        find_midpoints(contour_half_12, contour_half_22, midpoints, nseg//2)
+        find_midpoints(contour_half_11, contour_half_21, midpoints, nseg//2, ax)
+        find_midpoints(contour_half_12, contour_half_22, midpoints, nseg//2, ax)
 
         midpoints_all.append(midpoints)
+
+        ax.plot([pt_mid_1[0], pt_mid_2[0]], [pt_mid_1[1], pt_mid_2[1]], 'k')
+        
+        mid_mid_pt = middle_point(pt_mid_1, pt_mid_2)
+
+        ax.plot(mid_mid_pt[0], mid_mid_pt[1], 'k', marker='.', markersize=10)
+
+        for pt in contour_half_11:
+            ax.plot(pt[0], pt[1], 'go', markerfacecolor='none', markersize=5)
+        for pt in contour_half_12:
+            ax.plot(pt[0], pt[1], 'ko', markerfacecolor='none', markersize=5)
+
+        for pt in contour_half_21:
+            ax.plot(pt[0], pt[1], 'bo', markerfacecolor='none', markersize=5)
+        for pt in contour_half_22:
+            ax.plot(pt[0], pt[1], 'ko', markerfacecolor='none', markersize=5)
+
+        # plt.plot(pt_mid_1[0], pt_mid_1[1], 'ro')
+        # plt.plot(pt_mid_2[0], pt_mid_2[1], 'ro')
+        # plt.plot(contour_half_2[ind_mid_2_][0], contour_half_2[ind_mid_2_][1], 'yo')
+
+        ax.set_xlim(0, 500)
+        ax.set_ylim(0, 500)
+        plt.pause(0.00001)
 
 
     return midpoints_all
