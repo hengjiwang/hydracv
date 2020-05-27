@@ -481,6 +481,8 @@ class Analyzer:
             ax2 = fig.add_subplot(2, 1, 2)
             disp.add_spike_trains(ax2, peak_clusters, video.fps())
 
+            # plt.savefig("demo_cb_spikes.png")
+
         plt.show()
 
     def find_peaks(self, name=None, plot=False, height=0.1, wlen=100,
@@ -586,6 +588,8 @@ class Analyzer:
         disp.add_spike_trains(ax, self._spike_trains, self._fps)
         disp.add_color_stripes(ax, self._videos, len(self._spike_trains))
 
+        # plt.savefig("all_cb_spike_trains.png")
+
         plt.show()
 
     def stat_isi(self):
@@ -603,6 +607,8 @@ class Analyzer:
         ax2 = fig.add_subplot(1, 2, 2)
         isi_t = Analyzer.transpose_2d_list(self._isi)
         disp.add_boxplot(ax2, isi_t)
+
+        # plt.savefig("stat_isi.png")
 
         plt.show()
 

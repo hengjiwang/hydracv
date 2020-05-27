@@ -20,17 +20,37 @@ def load_contour(filename):
             contours[iframe] = pts
 
     elif file_format == 'xml':
-        root = ET.parse(filename).getroot()
-        rois = root.find('rois').findall('roi')
-        contours = []
-        for roi in rois[1:]:
-            points = roi.find('points').findall('point')
-            contour = []
-            for point in points:
-                pos_x = float(point.find('pos_x').text)
-                pos_y = float(point.find('pos_y').text)
-                contour.append((pos_x, pos_y))
-            contours.append(contour)
+        try:
+            root = ET.parse(filename).getroot()
+            rois = root.find('rois').findall('roi')
+            contours = []
+            for roi in rois[1:]:
+                points = roi.find('points').findall('point')
+                contour = []
+                for point in points:
+                    pos_x = float(point.find('pos_x').text)
+                    pos_y = float(point.find('pos_y').text)
+                    contour.append((pos_x, pos_y))
+                contours.append(contour)
+        except:
+            root = ET.parse(filename).getroot()
+            rois = root.findall('roi')
+            contours = []
+            for i in range(len(rois)):
+                contours.append(0)
+
+            for roi in rois:
+                id = int(roi.find('t').text)
+                points = roi.find('points').findall('point')
+                contour = []
+                for point in points:
+                    pos_x = float(point.find('pos_x').text)
+                    pos_y = float(point.find('pos_y').text)
+                    contour.append((pos_x, pos_y))
+                try:
+                    contours[id] = contour
+                except:
+                    print(id)
 
     return contours
 
@@ -98,7 +118,7 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
     # contours = contours[:nframes]
     # markers = markers[:nframes].values
 
-    # plt.figure()
+    plt.figure()
 
     # Loop over frames
     # for iframe in range(nframes):
@@ -112,7 +132,7 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
 
     for iframe in tqdm(range(len(contours))):
 
-        # plt.clf()
+        plt.clf()
 
         # plt.imshow(frame)
 
@@ -141,23 +161,14 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
 
         # Separate contour to two parts
         ind_arp1, ind_arp2 = min(ind_arp1, ind_arp2), max(ind_arp1, ind_arp2)
-        contour_half_1 = contour[:ind_arp1]
-        contour_half_2 = [contour[0]] + contour[ind_arp2:][::-1]
+        contour_half_1 = np.array(contour[:ind_arp1])
+        contour_half_2 = np.array([contour[0]] + contour[ind_arp2:][::-1])
 
-        # Interpolate contours
-        # contour_half_1 = intp_seq(contour_half_1, 5)
-        # contour_half_2 = intp_seq(contour_half_2, 5)
+        if len(contour_half_1) == 0 or len(contour_half_2) == 0:
+            continue
 
-        # for j, pt in enumerate(contour_half_1):
-        #     plt.text(pt[0], pt[1], str(j), color='g', fontsize=5)
-
-        # for j, pt in enumerate(contour_half_2):
-        #     plt.text(pt[0], pt[1], str(j), color='g', fontsize=5)
-
-        # for pt in contour_half_1:
-        #     plt.plot(pt[0], pt[1], 'go', markerfacecolor='none', markersize=5)
-        # for pt in contour_half_2:
-        #     plt.plot(pt[0], pt[1], 'go', markerfacecolor='none', markersize=5)
+        plt.plot(contour_half_1[:, 0], contour_half_1[:, 1], 'g.')
+        plt.plot(contour_half_2[:, 0], contour_half_2[:, 1], 'b.')
 
         # plt.plot(contour[ind_arp1][0], contour[ind_arp1][1], 'y.', markersize=20)
         # plt.plot(contour[ind_arp2][0], contour[ind_arp2][1], 'y.', markersize=20)
@@ -191,14 +202,15 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
 
             seg_pt_1 = contour_half_1[ind_seg_pt1]
             seg_pt_2 = contour_half_2[ind_seg_pt2]
-            # plt.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r')
+            plt.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r')
             midpoint = ((seg_pt_1[0] + seg_pt_2[0]) // 2, (seg_pt_1[1] + seg_pt_2[1]) // 2)
-            midpoints.append(midpoint)
-            # plt.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
+            midpoints.append(midpoint[0])
+            midpoints.append(midpoint[1])
+            plt.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
         
-        # plt.xlim(0, 500)
-        # plt.ylim(0, 500)
-        # plt.pause(0.001)
+        plt.xlim(0, 500)
+        plt.ylim(0, 500)
+        plt.pause(0.001)
 
         # ret, frame = cap.read()
         # iframe += 1
@@ -209,9 +221,34 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
     return midpoints_all
 
 if __name__ == "__main__":
-    midpoints = find_midline("../data/contour/Control-EGCaMP_exp1_a1_30x10fps_5%.xml",
-                             "../data/marker/Control-EGCaMP_exp1_a1_30x10fps_5%_001DLC_resnet50_EGCaMPFeb14shuffle1_576000.csv",
-                             "/home/hengji/Documents/hydrafiles/videos/EGCaMP/Control-EGCaMP_exp1_a1_30x10fps.avi")
+    # midpoints = find_midline("../data/contour/Control-EGCaMP_exp1_a1_30x10fps_5%.xml",
+    #                          "../data/marker/Control-EGCaMP_exp1_a1_30x10fps_5%_001DLC_resnet50_EGCaMPFeb14shuffle1_576000.csv",
+    #                          "/home/hengji/Documents/hydrafiles/videos/EGCaMP/Control-EGCaMP_exp1_a1_30x10fps.avi")
+
+    FILENAME = "0hr_Control_ngcampmov_30x4fps_50%intensity_exp3_a3"
+
+    midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
+                             "../data/marker/0hr_Control_ngcampmov_30x4fps_50%intensity_exp3_a3_enhanced_editDLC_resnet50_TTypectrlFeb26shuffle1_524000.csv",
+                             "")
 
     df = pd.DataFrame(midpoints)
-    df.to_csv("./results/" + "Control-EGCaMP_exp1_a1_30x10fps/" + "midpoints/midpoints_bisection.csv", index=False)
+    df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection.csv", index=False)
+
+    # FILENAME = "Pre_Bisect_40x_4fps_ex4"
+
+    # midpoints = find_midline("../data/contour/Pre_Bisect_40x_4fps_ex4_ROIs.xml",
+    #                          "../data/marker/Pre_Bisect_40x_4fps_ex4DeepCut_resnet50_Hydra2Nov17shuffle1_1030000.csv",
+    #                          "")
+
+    # df = pd.DataFrame(midpoints)
+    # df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection.csv", index=False)
+
+    # FILENAME = "Control-EGCaMP_exp1_a2_25x10fps_30mins"
+
+    # midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
+    #                          "../data/marker/Control-EGCaMP_exp1_a2_25x10fps_30minsDLC_resnet50_LType-Ctrl2Mar24shuffle1_360000.csv",
+    #                          "")
+
+    # df = pd.DataFrame(midpoints)
+    # df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection.csv", index=False)
+

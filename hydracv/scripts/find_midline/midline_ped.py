@@ -169,5 +169,5 @@ if __name__ == "__main__":
             flat_list.append(y)
         mpt_df.append(flat_list)
 
-    df = pd.DataFrame(mpt_df)
-    df.to_csv('/home/shashank/Desktop/midpoints.csv', index = False)
+    # df = pd.DataFrame(mpt_df)
+    # df.to_csv('/home/shashank/Desktop/midpoints.csv', index = False)

@@ -140,14 +140,15 @@ class Classifier:
         self._classify_bend(theta_mfh_thres, theta_qfm_thres)
 
 
-    def play(self, save=True, outname="Control-EGCaMP_exp1_a1_30x10fps", fps=20):
+    def play(self, save=True, outname="Control-EGCaMP_exp1_a1_30x10fps", fps=200):
         "Play the results"
-
-        plt.figure(figsize=(10, 10))
 
         cap = cv2.VideoCapture(self.videopath)
         ret, frame = cap.read()
         ny, nx, _ = frame.shape
+
+        DPI = 100
+        plt.figure(figsize=(nx/DPI, ny/DPI), dpi=DPI)
 
         pbar = tqdm(total=self.nframes)
 
@@ -156,17 +157,31 @@ class Classifier:
             plt.clf()
             # Show frame
             plt.imshow(frame)
+
             # Show tracked points
             for j in range(self.npoints):
                 plt.plot(self.midpoints[j][iframe][0], self.midpoints[j][iframe][1], 'r.')
 
+
             # Display the behavior
             plt.text(int(5/6*ny), int(1/6*nx), self.behaviors[iframe][0], color='white', fontsize=20)
             plt.text(int(5/6*ny), int(2/9*nx), self.behaviors[iframe][1], color='white', fontsize=20)
+
+            # Adjust margin
+            plt.axis('off')
+
+            plt.gca().xaxis.set_major_locator(plt.NullLocator())
+            plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+            plt.xlim(0, nx)
+            plt.ylim(0, ny)
+            plt.subplots_adjust(top=1, bottom=0, left=0, right=1, hspace=0, wspace=0)
+            plt.margins(0, 0)
+
             # Save frame
             if save:
-                plt.savefig('./results/'+ outname +'/frames/img' + str(iframe) + '.jpg') # , orientation='landscape')
-            plt.pause(0.001)
+                plt.savefig('./results/'+ outname +'/frames/img' + str(iframe) + '.jpg', dpi=DPI) # , orientation='landscape')
+            plt.pause(0.0001)
             ret, frame = cap.read()
             iframe += 1
             pbar.update()
@@ -178,7 +193,7 @@ class Classifier:
         # Save video
         if save:
             fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-            videoWriter = cv2.VideoWriter('./results/' + outname + '/video/video.avi', fourcc, fps, (1000, 1000))
+            videoWriter = cv2.VideoWriter('./results/' + outname + '/video/video.avi', fourcc, fps, (nx, ny))
 
             for iframe in tqdm(range(self.nframes)):
                 frame = cv2.imread('./results/'+ outname +'/frames/img' + str(iframe) + '.jpg')
@@ -186,7 +201,7 @@ class Classifier:
             videoWriter.release()
             cv2.destroyAllWindows()
     
-    def plot_behavior_periods(self):
+    def plot_behavior_periods(self, savepath):
         "Plot the behavior periods"
         plt.figure(figsize=(20, 5))
         for iframe in tqdm(range(self.nframes)):
@@ -203,7 +218,8 @@ class Classifier:
         plt.ylim(0.5, 3.5)
         plt.xlim(0, 1500)
         plt.xlabel('time (s)')
-        # plt.savefig('./results/Periods_'+FILENAME.strip('.csv')+'.png')
+        if savepath:
+            plt.savefig(savepath)
         plt.show()
 
     def plot_slopes_and_lengths(self):
@@ -224,7 +240,7 @@ class Classifier:
 
 if __name__ == "__main__":
     classifier = Classifier()
-    classifier.set_midpoints("/home/hengji/Documents/hydracv/hydracv/classifier/data/Control-EGCaMP_exp1_a1_30x10fps_midpoints.csv")
+    classifier.set_midpoints("/home/hengji/Documents/hydracv/hydracv/midline/results/Control-EGCaMP_exp1_a1_30x10fps/midpoints/midpoints_bisection_corrected.csv")
     classifier.set_videopath("/home/hengji/Documents/hydrafiles/videos/EGCaMP/Control-EGCaMP_exp1_a1_30x10fps.avi")
     classifier.classify(winlen_slp=21,
                         lo_slp_thres=0,
