@@ -104,7 +104,7 @@ def length_segment(seg):
 
     return length
 
-def find_midline(file_contour, file_marker, file_video, nseg=40):
+def find_midline(file_contour, file_marker, file_video, nseg=40, play=False):
     "Find midline"
 
     # Load files
@@ -118,23 +118,25 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
     # contours = contours[:nframes]
     # markers = markers[:nframes].values
 
-    plt.figure()
+    if play:
+        plt.figure()
 
     # Loop over frames
     # for iframe in range(nframes):
 
-    # cap = cv2.VideoCapture(file_video)
-    # ret, frame = cap.read()
-    # ny, nx, _ = frame.shape
+    cap = cv2.VideoCapture(file_video)
+    ret, frame = cap.read()
+    ny, nx, _ = frame.shape
 
     iframe = 0
-    # while(ret):
+    while(ret):
 
-    for iframe in tqdm(range(len(contours))):
+    # for iframe in tqdm(range(len(contours))):
+        
+        if play:
+            plt.clf()
 
-        plt.clf()
-
-        # plt.imshow(frame)
+        plt.imshow(frame)
 
         # Extract contour and marker
         contour = contours[iframe]
@@ -166,9 +168,10 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
 
         if len(contour_half_1) == 0 or len(contour_half_2) == 0:
             continue
-
-        plt.plot(contour_half_1[:, 0], contour_half_1[:, 1], 'g.')
-        plt.plot(contour_half_2[:, 0], contour_half_2[:, 1], 'b.')
+        
+        if play:
+            plt.plot(contour_half_1[:, 0], contour_half_1[:, 1], 'g.')
+            plt.plot(contour_half_2[:, 0], contour_half_2[:, 1], 'b.')
 
         # plt.plot(contour[ind_arp1][0], contour[ind_arp1][1], 'y.', markersize=20)
         # plt.plot(contour[ind_arp2][0], contour[ind_arp2][1], 'y.', markersize=20)
@@ -202,18 +205,21 @@ def find_midline(file_contour, file_marker, file_video, nseg=40):
 
             seg_pt_1 = contour_half_1[ind_seg_pt1]
             seg_pt_2 = contour_half_2[ind_seg_pt2]
-            plt.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r')
+            if play:
+                plt.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r')
             midpoint = ((seg_pt_1[0] + seg_pt_2[0]) // 2, (seg_pt_1[1] + seg_pt_2[1]) // 2)
             midpoints.append(midpoint[0])
             midpoints.append(midpoint[1])
-            plt.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
+            if play:
+                plt.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
         
-        plt.xlim(0, 500)
-        plt.ylim(0, 500)
-        plt.pause(0.001)
+        if play:
+            plt.xlim(0, 500)
+            plt.ylim(0, 500)
+            plt.pause(0.001)
 
-        # ret, frame = cap.read()
-        # iframe += 1
+        ret, frame = cap.read()
+        iframe += 1
 
         midpoints_all.append(midpoints)
 
