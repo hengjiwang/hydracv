@@ -201,7 +201,7 @@ if __name__ == '__main__':
     fig = plt.figure()
     plt.plot(lengths)
     plt.show()
-    identifier = sys.argv[1].split('/')[-1].strip('.xml')
+    identifier = df.IcyFilePath.values[0].split('/')[-1].strip('.xml')
     try:
         fig.savefig('output_con/pedunc_fluo_' + identifier + '.png')
     except FileNotFoundError:

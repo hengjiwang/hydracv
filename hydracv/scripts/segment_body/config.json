@@ -1,11 +1,11 @@
 [{
-    "Name": "EndoRCaMP_ctrl_30mins_35x_10fps_79%intensity_mv6",
-    "IcyFilePath": "/home/shashank/Downloads/test_class/EndoRCaMP_ctrl_30mins_35x_10fps_79%intensity_mv6.xml",
-    "DeeplabcutFilePath": "/home/shashank/Downloads/test_class/EndoRCaMP_ctrl_30mins_35x_10fps_79%intensity_mv6.csv",
+    "Name": "NGCaMP6_50X_20fps_M1",
+    "IcyFilePath": "/home/shashank/Downloads/icy_xml/NGCaMP6_50X_20fps_M1_001_R1.xml",
+    "DeeplabcutFilePath": "/home/shashank/Downloads/dlc_data/NGCaMP6_50X_20fps_M1DLC_resnet50_NGCaMPOct11shuffle1_132000.csv",
     "MaxDepth": 3,
-    "ScaleX": 1,
-    "ScaleY": 1,
-    "VideoPath": "/home/shashank/Downloads/test_class/EndoRCaMP_ctrl_30mins_35x_10fps_79%intensity_mv6.avi",
+    "ScaleX": 2,
+    "ScaleY": 2,
+    "VideoPath": "/home/shashank/Downloads/NGCaMP6_50X_20fps_M1.avi",
     "InterpolateMidlineNum": 10,
     "InterpolateContourNum": 10
 }]

@@ -5,6 +5,28 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 import sys, csv, os
 from tqdm import tqdm
+import pickle
+import cv2
+
+def load_contour_cv(file_cv):
+    contours = []
+    print('Loading Pickle')
+    with open(file_cv, 'rb') as f:
+        ctrs = pickle.load(f)
+    fr = np.shape(ctrs)[0]
+    l = len(ctrs)
+    # print(np.shape(ctrs))
+    for contour in ctrs:
+        try:
+            p = np.shape(contour)[1]
+        except:
+            contours.append(contours[-1])
+            continue
+        fr_ctr = []
+        for j in range(p):
+            fr_ctr.append([contour[0][j][0][0], contour[0][j][0][1]])
+        contours.append(fr_ctr)
+    return contours
 
 def load_contour_j(file_icy):
     root = ET.parse(file_icy).getroot()
@@ -62,11 +84,14 @@ def load_data(file_icy, file_dlc, drop = True, threshold = 0.5, scale = (2, 2)):
     :return: coordinates of contour, coordinates of tracked points, index of bad frames
     :rtype: list, pandas.core.frame.DataFrame, numpy.array
     '''
-    try:
-        contours = load_contour(file_icy)
-    except:
-        print('loading')
-        contours = load_contour_j(file_icy)
+    if file_icy.endswith('.pkl'):
+        contours = load_contour_cv(file_icy)
+    else:
+        try:
+            contours = load_contour(file_icy)
+        except:
+            print('loading')
+            contours = load_contour_j(file_icy)
     df = load_tracked_points(file_dlc)
 
     # Scale coordinates
@@ -124,6 +149,21 @@ def locate_point(marker, contour, hypostome = None, slope = None, const = None):
         dist = (marker[0] - contour[j][0])**2 + (marker[1] - contour[j][1])**2
         s = same_side_of_line(slope, const, hypostome, contour[j])
         if dist < mindist and s:
+            mindist = dist
+            index = j
+
+    return index
+
+def locate_near_point(marker, contour):
+    '''
+    Locate the corresponding nearest point to given point on contour
+    :return: int; index of marker
+    '''
+    index = 0
+    mindist = np.inf
+    for j in range(len(contour)):
+        dist = (marker[0] - contour[j][0])**2 + (marker[1] - contour[j][1])**2
+        if dist < mindist:
             mindist = dist
             index = j
 
@@ -271,12 +311,13 @@ def main(file_icy, file_dlc, max_depth, scale, display=False):
     num_frames = len(contours)
     plt.figure(figsize=(20,20))
 
+    cap = cv2.VideoCapture('/home/shashank/Desktop/Control-EGCaMP_exp1_a1_30x10fps_5%.avi')
     # Loop over all frames
     for iframe in tqdm(range(num_frames)):
 
         markers = df.iloc[iframe]
         contour = contours[iframe]
-
+        ret, frame = cap.read()
         # Pass dropped frames
         if np.isnan(markers[0]):
             lengths.append(lengths[-1])
@@ -323,17 +364,31 @@ def main(file_icy, file_dlc, max_depth, scale, display=False):
         seg1_x = [p[0] for p in seg1]
         seg1_y = [p[1] for p in seg1]
 
+        seg2_x = [p[0] for p in seg2]
+        seg2_y = [p[1] for p in seg2]
+
         mid_x = [p[0] for p in midpoints]
         mid_y = [p[1] for p in midpoints]
 
+        side1_x = [p[0][0] for p in sidepoints]
+        side1_y = [p[0][1] for p in sidepoints]
+        side2_x = [p[1][0] for p in sidepoints]
+        side2_y = [p[1][1] for p in sidepoints]
         # Draw
         # print(iframe)
+        # if(iframe<160):
+        #     continue
+
+
         if(display):
             matplotlib.use('Qt5Agg')
             plt.clf()
+            # plt.imshow(frame)
             plt.scatter(contour_x, contour_y, color = '', marker = 'o', edgecolors= 'g')
             plt.scatter(hypostome_point[0], hypostome_point[1], color='k', marker='o')
             plt.plot(mid_x, mid_y, 'r.-')
+            for i in range(len(side1_x)):
+                plt.plot([side1_x, side2_x], [side1_y, side2_y], color='indigo')
             plt.plot([markers['armpit1_x'],hyp_point[0]], [markers['armpit1_y'],hyp_point[1]], 'go-')
             plt.plot([markers['armpit2_x'],hyp_point[0]], [markers['armpit2_y'],hyp_point[1]], 'go-')
             plt.plot([hyp_point[0], mid_x[-1]], [hyp_point[1], mid_y[-1]], 'r-')
@@ -346,8 +401,6 @@ def main(file_icy, file_dlc, max_depth, scale, display=False):
             plt.ylim(0, 600)
             plt.pause(0.0001)
 
-        # if(iframe > 1600):
-        #     input('Press Enter')
 
 
     return lengths, dropped_frames, midpoints_all
