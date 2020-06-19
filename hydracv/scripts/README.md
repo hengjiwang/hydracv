@@ -1,4 +1,4 @@
-# Data Analysis Tools for *Hydra* Videos
+# Data Analysis Scripts for *Hydra* Videos
 
 - [Data Analysis Tools for *Hydra* Videos](#data-analysis-tools-for-hydra-videos)
   - [0. Dependencies](#0-dependencies)
