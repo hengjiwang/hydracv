@@ -11,7 +11,8 @@ import scipy.signal
 from hydracv.scripts.find_midline import midline_new
 from hydracv.scripts.peduncle_fluo import pedunc_fluo_contour
 
-import hydracv.disp as disp
+import hydracv.utils.disp as disp
+import hydracv.utils.utils as utils
 
 class Analyzer:
     """A tool for analyzing calcium imaging videos (of Hydra)"""
@@ -570,7 +571,7 @@ class Analyzer:
         video.set_peaks(peaks)
 
         # Cluster peaks into different CB
-        peak_clusters = Analyzer.cluster_peaks(peaks, min_cb_interval=min_cb_interval*video.fps())
+        peak_clusters = utils.cluster_peaks(peaks, min_cb_interval=min_cb_interval*video.fps(), realign=True)
         video.set_peak_clusters(peak_clusters)
 
         if plot:
@@ -579,10 +580,13 @@ class Analyzer:
 
             ax1 = fig.add_subplot(2, 1, 1)
             disp.add_fluorescence(ax1, time_axis, fluo)
+            ax1.set_xlabel("time(s)")
             disp.add_peaks(ax1, peaks, fluo, video.fps())
 
             ax2 = fig.add_subplot(2, 1, 2)
             disp.add_spike_trains(ax2, peak_clusters, video.fps())
+
+            # plt.savefig("demo_cb_spikes.png")
 
         plt.show()
 
@@ -624,36 +628,6 @@ class Analyzer:
                 self._find_peaks_for_single(name[j], plot, height, wlen,
                                             prominence, min_cb_interval)
 
-
-    @staticmethod
-    def cluster_peaks(peaks, min_cb_interval):
-        """Separate peaks into different clusters based on min_cb_interval(in frame numbers)"""
-        clusters = [[]]
-
-        # Clustering peaks
-        for j in range(len(peaks)-1):
-            pk = peaks[j]
-            pk_nxt = peaks[j+1]
-            clusters[-1].append(pk)
-            if pk_nxt - pk < min_cb_interval:
-                pass
-            else:
-                clusters.append([])
-
-        clusters[-1].append(peaks[-1])
-
-        # Subtracting offsets
-        indices_to_keep = []
-        for i in range(len(clusters)):
-            cluster = clusters[i]
-            if len(cluster) >= 3:
-                indices_to_keep.append(i)
-            offset = cluster[0]
-            for j in range(len(cluster)):
-                cluster[j] -= offset
-
-        return list(np.array(clusters)[indices_to_keep])
-
     def _update_spike_trains_and_fps(self):
         """Update the _spike_trains and _fps of the Analyzer object."""
 
@@ -689,6 +663,8 @@ class Analyzer:
         disp.add_spike_trains(ax, self._spike_trains, self._fps)
         disp.add_color_stripes(ax, self._videos, len(self._spike_trains))
 
+        # plt.savefig("all_cb_spike_trains.png")
+
         plt.show()
 
     def stat_isi(self):
@@ -706,6 +682,8 @@ class Analyzer:
         ax2 = fig.add_subplot(1, 2, 2)
         isi_t = Analyzer.transpose_2d_list(self._isi)
         disp.add_boxplot(ax2, isi_t)
+
+        # plt.savefig("stat_isi.png")
 
         plt.show()
 

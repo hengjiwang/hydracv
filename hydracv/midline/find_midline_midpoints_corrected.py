@@ -20,36 +20,39 @@ def load_contour(filename):
             contours[iframe] = pts
 
     elif file_format == 'xml':
-        root = ET.parse(filename).getroot()
-        rois = root.find('rois').findall('roi')
-        contours = []
-        for roi in rois[1:]:
-            points = roi.find('points').findall('point')
-            contour = []
-            for point in points:
-                pos_x = float(point.find('pos_x').text)
-                pos_y = float(point.find('pos_y').text)
-                contour.append((pos_x, pos_y))
-            contours.append(contour)
+        try:
+            root = ET.parse(filename).getroot()
+            rois = root.find('rois').findall('roi')
+            contours = []
+            for roi in rois[1:]:
+                points = roi.find('points').findall('point')
+                contour = []
+                for point in points:
+                    pos_x = float(point.find('pos_x').text)
+                    pos_y = float(point.find('pos_y').text)
+                    contour.append((pos_x, pos_y))
+                contours.append(contour)
+        except:
+            root = ET.parse(filename).getroot()
+            rois = root.findall('roi')
+            contours = []
+            for i in range(len(rois)):
+                contours.append(0)
+
+            for roi in rois:
+                id = int(roi.find('t').text)
+                points = roi.find('points').findall('point')
+                contour = []
+                for point in points:
+                    pos_x = float(point.find('pos_x').text)
+                    pos_y = float(point.find('pos_y').text)
+                    contour.append((pos_x, pos_y))
+                try:
+                    contours[id] = contour
+                except:
+                    print(id)
 
     return contours
-
-def intp_seq(seq, nintp):
-    "Interpolate sequence"
-    seq_new = []
-    for j in range(1, len(seq)):
-        x_prev = seq[j-1][0]
-        y_prev = seq[j-1][1]
-        x_next = seq[j][0]
-        y_next = seq[j][1]
-        xintp = np.linspace(x_prev, x_next, nintp, endpoint=False)
-        yintp = np.linspace(y_prev, y_next, nintp, endpoint=False)
-        for k in range(len(xintp)):
-            seq_new.append((xintp[k], yintp[k]))
-    
-    seq_new.append(seq[-1])
-    return seq_new
-
 
 def load_marker(filename):
     "Load tracked points"
@@ -60,7 +63,32 @@ def load_marker(filename):
                   'peduncle_x', 'peduncle_y', 'peduncle_likelihood']
     df = df.drop(index=[0, 1]).drop(columns='scorer').reset_index(drop=True)
     df = df.astype(float)
-    return df  
+    return df.values
+
+def load_midpoints(filename):
+    "Load the midpoints"
+    midpoints = []
+    data = pd.read_csv(filename).values
+    nframes = len(data)
+    npoints = len(data[0]) // 2
+    
+    for i in range(nframes):
+        midpoints.append([])
+        for j in range(npoints):
+            midpoints[-1].append((data[i][2*j], data[i][2*j+1]))
+
+    return np.array(midpoints)
+
+def angle(x, y, z):
+    lenxy = length_segment([x, y])
+    lenxz = length_segment([x, z])
+    lenyz = length_segment([y, z])
+
+    ag = np.arccos((lenxy**2 + lenyz**2 - lenxz**2) / (2 * lenxy * lenyz))
+
+    # print("Angle: " + str(ag))
+
+    return ag
 
 def locate_point(marker, contour):
     "Locate the corresponding index of the marker on contour"
@@ -72,6 +100,22 @@ def locate_point(marker, contour):
         if dist < mindist:
             mindist = dist
             index = j
+
+    return index
+
+def locate_point_with_angle_constr(marker, contour, angle_diff_thres):
+    "Locate the corresponding index of the marker on contour"
+
+    index = 0
+    mindist = np.inf
+    for j in range(1, len(contour)-1):
+        dist = (marker[0] - contour[j][0])**2 + (marker[1] - contour[j][1])**2
+        if dist < mindist:
+            ag = angle(marker, contour[j-1], contour[j+1])
+            if np.pi/2 - angle_diff_thres < ag < np.pi/2 + angle_diff_thres:
+                # print("Final Angle: " + str(ag))
+                mindist = dist
+                index = j
 
     return index
 
@@ -88,10 +132,8 @@ def middle_point(pt1, pt2):
     "Returns the midpoint of pt1 and pt2"
     return ((pt1[0] + pt2[0]) / 2, (pt1[1] + pt2[1]) / 2)
 
-def angle(x, y, z):
-    return np.arccos((x**2 + y**2 - z**2) / (2 * x * y))
 
-def find_midpoints(seg1, seg2, midpoints, nseg, ax):
+def find_midpoints(seg1, seg2, midpoints, nseg, ax=None):
     "Find the midpoints of seg1 and seg2"
     len_contour_1 = length_segment(seg1)
     len_contour_2 = length_segment(seg2)
@@ -102,51 +144,76 @@ def find_midpoints(seg1, seg2, midpoints, nseg, ax):
     for j in range(1, nseg):
         
         # Locate the segment points
-        while cum_len_1 < j/nseg * len_contour_1:
+        while cum_len_1 <= j/nseg * len_contour_1:
             cum_len_1 += length_segment(seg1[ind_seg_pt1:ind_seg_pt1+2])
             ind_seg_pt1 += 1
 
-        while cum_len_2 < j/nseg * len_contour_2:
+        while cum_len_2 <= j/nseg * len_contour_2:
             cum_len_2 += length_segment(seg2[ind_seg_pt2:ind_seg_pt2+2])
             ind_seg_pt2 += 1
 
-        if len(seg2) == 0:
-            input()
+        # if len(seg2) == 0:
+        #     input()
 
         seg_pt_1 = seg1[ind_seg_pt1]
         seg_pt_2 = seg2[ind_seg_pt2]
 
         midpoint = ((seg_pt_1[0] + seg_pt_2[0]) // 2, (seg_pt_1[1] + seg_pt_2[1]) // 2)
 
-        ax.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r-')
-        ax.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
+        if ax:
+            # ax.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r-')
+            ax.plot(midpoint[0], midpoint[1], 'r.')
 
-        midpoints.append(midpoint)
+        midpoints.append(midpoint[0])
+        midpoints.append(midpoint[1])
 
-def find_midline(file_contour, file_marker, file_behaviors, nseg=40):
+def extract_lengths(midpoints):
+    "Extract lengths from midpoints"
+    midline_lens = []
+    for midline in midpoints:
+        midline_lens.append(length_segment(midline))
+
+    maxlen = max(midline_lens)
+    minlen = min(midline_lens)
+
+    res = [(x - minlen) / (maxlen - minlen) for x in midline_lens]
+
+    return res
+
+def find_midline(file_contour, file_marker, file_midpoints, nseg=40, display=False):
     "Find midline"
 
     # Load files
     contours = load_contour(file_contour)
-    markers = load_marker(file_marker).values
-    
-    behaviors = pd.read_csv(file_behaviors).values
+    markers = load_marker(file_marker)
+    midpoints_orig = load_midpoints(file_midpoints)
+
+    midlens = extract_lengths(midpoints_orig)
 
     midpoints_all = []
 
-    iframe = 0
+    # iframe = 0
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    if display:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    else:
+        ax = None
 
     for iframe in tqdm(range(len(contours))):
-
-        ax.clear()
+        
+        if display:
+            ax.clear()
 
         # Extract contour and marker
         contour = contours[iframe]
         marker_mat = markers[iframe]
-        behavior = behaviors[iframe]
+        midpoint_orig = midpoints_orig[iframe]
+
+        midlen = midlens[iframe]
+
+        if display:
+            ax.plot(midpoint_orig[:, 0], midpoint_orig[:, 1], 'k.')
 
         # Reformat marker
         marker = defaultdict(tuple)
@@ -172,12 +239,10 @@ def find_midline(file_contour, file_marker, file_behaviors, nseg=40):
         contour_half_1 = contour[:ind_arp1]
         contour_half_2 = [contour[0]] + contour[ind_arp2:][::-1]
 
-        # Locate middle segmenting points
-
+        # Locate middle segment point on one side
         len_half_1 = length_segment(contour_half_1)
         len_half_2 = length_segment(contour_half_2)
 
-        # ind_mid_1 = len(contour_half_1) // 2
         ind_mid_1 = 0
         cum_len_1 = 0
         while cum_len_1 < len_half_1 / 2:
@@ -185,15 +250,12 @@ def find_midline(file_contour, file_marker, file_behaviors, nseg=40):
             ind_mid_1 += 1
 
         pt_mid_1 = contour_half_1[ind_mid_1]
+
+        # Locate the middle segment point on the other side
+
         ind_mid_2 = locate_point(pt_mid_1, contour_half_2)
-
-        # criteria = angle(length_segment([pt_mid_2, pt_mid_1]),
-        #                  length_segment([pt_mid_1, marker['peduncle']]),
-        #                  length_segment([pt_mid_2, marker['peduncle']])) < np.pi/15
-
-        # print(behavior)
         
-        criteria = (behavior[2] == 'Bending') and ind_mid_2 > 6
+        criteria = midlen > 0.3
 
         if not criteria:
             ind_mid_2 = 0
@@ -202,52 +264,94 @@ def find_midline(file_contour, file_marker, file_behaviors, nseg=40):
                 cum_len_2 += length_segment(contour_half_2[ind_mid_2:ind_mid_2+2])
                 ind_mid_2 += 1
 
+        if ind_mid_2 == 0:
+            cum_len_2 = 0
+            while cum_len_2 < len_half_2 / 2:
+                cum_len_2 += length_segment(contour_half_2[ind_mid_2:ind_mid_2+2])
+                ind_mid_2 += 1
+
         pt_mid_2 = contour_half_2[ind_mid_2]
 
         # Separate half contours based on the middle points
-        contour_half_11 = contour_half_1[:ind_mid_1]
-        contour_half_12 = contour_half_1[ind_mid_1:]
-        contour_half_21 = contour_half_2[:ind_mid_2]
-        contour_half_22 = contour_half_2[ind_mid_2:]
+        contour_half_11 = np.array(contour_half_1[:ind_mid_1])
+        contour_half_12 = np.array(contour_half_1[ind_mid_1:])
+        contour_half_21 = np.array(contour_half_2[:ind_mid_2])
+        contour_half_22 = np.array(contour_half_2[ind_mid_2:])
 
         # Find the midpoints
         midpoints = []
         find_midpoints(contour_half_11, contour_half_21, midpoints, nseg//2, ax)
         find_midpoints(contour_half_12, contour_half_22, midpoints, nseg//2, ax)
 
+        midpoints = np.array(midpoints)
+
         midpoints_all.append(midpoints)
 
-        ax.plot([pt_mid_1[0], pt_mid_2[0]], [pt_mid_1[1], pt_mid_2[1]], 'k')
+        # ax.plot([pt_mid_1[0], pt_mid_2[0]], [pt_mid_1[1], pt_mid_2[1]], 'k')
         
         mid_mid_pt = middle_point(pt_mid_1, pt_mid_2)
 
-        ax.plot(mid_mid_pt[0], mid_mid_pt[1], 'k', marker='.', markersize=10)
+        # ax.plot(mid_mid_pt[0], mid_mid_pt[1], 'k', marker='.', markersize=10)
+        
+        if display:
+            ax.plot(contour_half_11[:,0], contour_half_11[:,1], 'g.', markersize=5)
+            ax.plot(contour_half_12[:,0], contour_half_12[:,1], 'k.', markersize=5)
+            ax.plot(contour_half_21[:,0], contour_half_21[:,1], 'b.', markersize=5)
+            ax.plot(contour_half_22[:,0], contour_half_22[:,1], 'k.', markersize=5)
 
-        for pt in contour_half_11:
-            ax.plot(pt[0], pt[1], 'go', markerfacecolor='none', markersize=5)
-        for pt in contour_half_12:
-            ax.plot(pt[0], pt[1], 'ko', markerfacecolor='none', markersize=5)
 
-        for pt in contour_half_21:
-            ax.plot(pt[0], pt[1], 'bo', markerfacecolor='none', markersize=5)
-        for pt in contour_half_22:
-            ax.plot(pt[0], pt[1], 'ko', markerfacecolor='none', markersize=5)
 
         # plt.plot(pt_mid_1[0], pt_mid_1[1], 'ro')
         # plt.plot(pt_mid_2[0], pt_mid_2[1], 'ro')
         # plt.plot(contour_half_2[ind_mid_2_][0], contour_half_2[ind_mid_2_][1], 'yo')
 
-        ax.set_xlim(0, 500)
-        ax.set_ylim(0, 500)
-        plt.pause(0.00001)
+        if display:
+            ax.set_xlim(0, 500)
+            ax.set_ylim(0, 500)
+            plt.pause(0.00001)
 
 
     return midpoints_all
 
 if __name__ == "__main__":
-    midpoints = find_midline("../data/contour/Control-EGCaMP_exp1_a1_30x10fps_5%.xml",
-                             "../data/marker/Control-EGCaMP_exp1_a1_30x10fps_5%_001DLC_resnet50_EGCaMPFeb14shuffle1_576000.csv",
-                             '/home/hengji/Documents/hydracv/hydracv/classifier/results/Control-EGCaMP_exp1_a1_30x10fps/behaviors.csv')
+    # FILENAME = "Control-EGCaMP_exp1_a1_30x10fps"
+    # midpoints = find_midline("../data/contour/Control-EGCaMP_exp1_a1_30x10fps_5%.xml",
+    #                          "../data/marker/Control-EGCaMP_exp1_a1_30x10fps_5%_001DLC_resnet50_EGCaMPFeb14shuffle1_576000.csv",
+    #                          "./results/Control-EGCaMP_exp1_a1_30x10fps/midpoints/midpoints_bisection.csv")
+
+    # FILENAME = "0hr_Control_ngcampmov_30x4fps_50%intensity_exp3_a3"
+
+    # midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
+    #                          "../data/marker/0hr_Control_ngcampmov_30x4fps_50%intensity_exp3_a3_enhanced_editDLC_resnet50_TTypectrlFeb26shuffle1_524000.csv",
+    #                          "./results/" + FILENAME + "/midpoints/midpoints_bisection.csv")
+
+    # df = pd.DataFrame(midpoints)
+    # df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection_corrected.csv", index=False)
+
+    # FILENAME = "0hr_Cafree+EGTA_ngcampmov_30x4fps_50%intensity_exp2_a1"
+
+    # midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
+    #                          "../data/marker/0hr_Cafree+EGTA_ngcampmov_30x4fps_50%intensity_exp2_a1_001DLC_resnet50_CaFree+EGTAFeb24shuffle1_596000.csv",
+    #                          "./results/" + FILENAME + "/midpoints/midpoints_bisection.csv")
+
+    # df = pd.DataFrame(midpoints)
+    # df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection_corrected.csv", index=False)
+
+    # FILENAME = "Pre_Bisect_40x_4fps_ex4"
+
+    # midpoints = find_midline("../data/contour/Pre_Bisect_40x_4fps_ex4_ROIs.xml",
+    #                          "../data/marker/Pre_Bisect_40x_4fps_ex4DeepCut_resnet50_Hydra2Nov17shuffle1_1030000.csv",
+    #                          "./results/" + FILENAME + "/midpoints/midpoints_bisection.csv")
+
+    # df = pd.DataFrame(midpoints)
+    # df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection_corrected.csv", index=False)
+
+    FILENAME = "Control-EGCaMP_exp1_a2_25x10fps_30mins"
+
+    midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
+                             "../data/marker/Control-EGCaMP_exp1_a2_25x10fps_30minsDLC_resnet50_LType-Ctrl2Mar24shuffle1_360000.csv",
+                             "./results/" + FILENAME + "/midpoints/midpoints_bisection.csv",
+                             display=True)
 
     df = pd.DataFrame(midpoints)
-    df.to_csv("./results/" + "Control-EGCaMP_exp1_a1_30x10fps/" + "midpoints/midpoints_bisection_corrected.csv", index=False)
+    df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection_corrected.csv", index=False)

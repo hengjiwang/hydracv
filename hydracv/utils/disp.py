@@ -4,7 +4,6 @@ import random
 def add_fluorescence(ax, time_axis, fluo):
     """Add a plot of fluo to ax"""
     ax.plot(time_axis, fluo, 'g-')
-    ax.set_xlabel("time(s)")
     ax.set_ylabel("fluorescence (a.u.)")
 
 def add_midline_len(ax, time_axis, midline_len):
