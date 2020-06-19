@@ -104,7 +104,7 @@ def length_segment(seg):
 
     return length
 
-def find_midline(file_contour, file_marker, file_video, nseg=40, play=False):
+def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
     "Find midline"
 
     # Load files
@@ -124,19 +124,19 @@ def find_midline(file_contour, file_marker, file_video, nseg=40, play=False):
     # Loop over frames
     # for iframe in range(nframes):
 
-    cap = cv2.VideoCapture(file_video)
-    ret, frame = cap.read()
-    ny, nx, _ = frame.shape
+    # cap = cv2.VideoCapture(file_video)
+    # ret, frame = cap.read()
+    # ny, nx, _ = frame.shape
 
-    iframe = 0
-    while(ret):
+    # iframe = 0
+    # while(ret):
 
-    # for iframe in tqdm(range(len(contours))):
+    for iframe in tqdm(range(len(contours))):
         
         if play:
             plt.clf()
 
-        plt.imshow(frame)
+        # plt.imshow(frame)
 
         # Extract contour and marker
         contour = contours[iframe]
@@ -218,8 +218,8 @@ def find_midline(file_contour, file_marker, file_video, nseg=40, play=False):
             plt.ylim(0, 500)
             plt.pause(0.001)
 
-        ret, frame = cap.read()
-        iframe += 1
+        # ret, frame = cap.read()
+        # iframe += 1
 
         midpoints_all.append(midpoints)
 

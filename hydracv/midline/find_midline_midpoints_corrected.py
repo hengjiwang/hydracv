@@ -133,7 +133,7 @@ def middle_point(pt1, pt2):
     return ((pt1[0] + pt2[0]) / 2, (pt1[1] + pt2[1]) / 2)
 
 
-def find_midpoints(seg1, seg2, midpoints, nseg, ax):
+def find_midpoints(seg1, seg2, midpoints, nseg, ax=None):
     "Find the midpoints of seg1 and seg2"
     len_contour_1 = length_segment(seg1)
     len_contour_2 = length_segment(seg2)
@@ -144,11 +144,11 @@ def find_midpoints(seg1, seg2, midpoints, nseg, ax):
     for j in range(1, nseg):
         
         # Locate the segment points
-        while cum_len_1 < j/nseg * len_contour_1:
+        while cum_len_1 <= j/nseg * len_contour_1:
             cum_len_1 += length_segment(seg1[ind_seg_pt1:ind_seg_pt1+2])
             ind_seg_pt1 += 1
 
-        while cum_len_2 < j/nseg * len_contour_2:
+        while cum_len_2 <= j/nseg * len_contour_2:
             cum_len_2 += length_segment(seg2[ind_seg_pt2:ind_seg_pt2+2])
             ind_seg_pt2 += 1
 
@@ -160,8 +160,9 @@ def find_midpoints(seg1, seg2, midpoints, nseg, ax):
 
         midpoint = ((seg_pt_1[0] + seg_pt_2[0]) // 2, (seg_pt_1[1] + seg_pt_2[1]) // 2)
 
-        # ax.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r-')
-        # ax.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
+        if ax:
+            # ax.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r-')
+            ax.plot(midpoint[0], midpoint[1], 'r.')
 
         midpoints.append(midpoint[0])
         midpoints.append(midpoint[1])
@@ -179,7 +180,7 @@ def extract_lengths(midpoints):
 
     return res
 
-def find_midline(file_contour, file_marker, file_midpoints, nseg=40):
+def find_midline(file_contour, file_marker, file_midpoints, nseg=40, display=False):
     "Find midline"
 
     # Load files
@@ -191,14 +192,18 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40):
 
     midpoints_all = []
 
-    iframe = 0
+    # iframe = 0
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    if display:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    else:
+        ax = None
 
     for iframe in tqdm(range(len(contours))):
-
-        # ax.clear()
+        
+        if display:
+            ax.clear()
 
         # Extract contour and marker
         contour = contours[iframe]
@@ -207,7 +212,8 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40):
 
         midlen = midlens[iframe]
 
-        # ax.plot(midpoint_orig[:, 0], midpoint_orig[:, 1], 'k.')
+        if display:
+            ax.plot(midpoint_orig[:, 0], midpoint_orig[:, 1], 'k.')
 
         # Reformat marker
         marker = defaultdict(tuple)
@@ -279,8 +285,6 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40):
 
         midpoints = np.array(midpoints)
 
-        # ax.plot(midpoints[:, 0], midpoints[:, 1], 'r.') 
-
         midpoints_all.append(midpoints)
 
         # ax.plot([pt_mid_1[0], pt_mid_2[0]], [pt_mid_1[1], pt_mid_2[1]], 'k')
@@ -288,11 +292,12 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40):
         mid_mid_pt = middle_point(pt_mid_1, pt_mid_2)
 
         # ax.plot(mid_mid_pt[0], mid_mid_pt[1], 'k', marker='.', markersize=10)
-
-        # ax.plot(contour_half_11[:,0], contour_half_11[:,1], 'g.', markersize=5)
-        # ax.plot(contour_half_12[:,0], contour_half_12[:,1], 'k.', markersize=5)
-        # ax.plot(contour_half_21[:,0], contour_half_21[:,1], 'b.', markersize=5)
-        # ax.plot(contour_half_22[:,0], contour_half_22[:,1], 'k.', markersize=5)
+        
+        if display:
+            ax.plot(contour_half_11[:,0], contour_half_11[:,1], 'g.', markersize=5)
+            ax.plot(contour_half_12[:,0], contour_half_12[:,1], 'k.', markersize=5)
+            ax.plot(contour_half_21[:,0], contour_half_21[:,1], 'b.', markersize=5)
+            ax.plot(contour_half_22[:,0], contour_half_22[:,1], 'k.', markersize=5)
 
 
 
@@ -300,18 +305,19 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40):
         # plt.plot(pt_mid_2[0], pt_mid_2[1], 'ro')
         # plt.plot(contour_half_2[ind_mid_2_][0], contour_half_2[ind_mid_2_][1], 'yo')
 
-        # ax.set_xlim(0, 500)
-        # ax.set_ylim(0, 500)
-        # plt.pause(0.00001)
+        if display:
+            ax.set_xlim(0, 500)
+            ax.set_ylim(0, 500)
+            plt.pause(0.00001)
 
 
     return midpoints_all
 
 if __name__ == "__main__":
-    FILENAME = "Control-EGCaMP_exp1_a1_30x10fps"
-    midpoints = find_midline("../data/contour/Control-EGCaMP_exp1_a1_30x10fps_5%.xml",
-                             "../data/marker/Control-EGCaMP_exp1_a1_30x10fps_5%_001DLC_resnet50_EGCaMPFeb14shuffle1_576000.csv",
-                             "./results/Control-EGCaMP_exp1_a1_30x10fps/midpoints/midpoints_bisection.csv")
+    # FILENAME = "Control-EGCaMP_exp1_a1_30x10fps"
+    # midpoints = find_midline("../data/contour/Control-EGCaMP_exp1_a1_30x10fps_5%.xml",
+    #                          "../data/marker/Control-EGCaMP_exp1_a1_30x10fps_5%_001DLC_resnet50_EGCaMPFeb14shuffle1_576000.csv",
+    #                          "./results/Control-EGCaMP_exp1_a1_30x10fps/midpoints/midpoints_bisection.csv")
 
     # FILENAME = "0hr_Control_ngcampmov_30x4fps_50%intensity_exp3_a3"
 
@@ -340,11 +346,12 @@ if __name__ == "__main__":
     # df = pd.DataFrame(midpoints)
     # df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection_corrected.csv", index=False)
 
-    # FILENAME = "Control-EGCaMP_exp1_a2_25x10fps_30mins"
+    FILENAME = "Control-EGCaMP_exp1_a2_25x10fps_30mins"
 
-    # midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
-    #                          "../data/marker/Control-EGCaMP_exp1_a2_25x10fps_30minsDLC_resnet50_LType-Ctrl2Mar24shuffle1_360000.csv",
-    #                          "./results/" + FILENAME + "/midpoints/midpoints_bisection.csv")
+    midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
+                             "../data/marker/Control-EGCaMP_exp1_a2_25x10fps_30minsDLC_resnet50_LType-Ctrl2Mar24shuffle1_360000.csv",
+                             "./results/" + FILENAME + "/midpoints/midpoints_bisection.csv",
+                             display=True)
 
     df = pd.DataFrame(midpoints)
     df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection_corrected.csv", index=False)
