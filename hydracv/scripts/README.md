@@ -1,6 +1,6 @@
 # Data Analysis Scripts for *Hydra* Videos
 
-- [Data Analysis Tools for *Hydra* Videos](#data-analysis-tools-for-hydra-videos)
+- [Data Analysis Scripts for *Hydra* Videos](#data-analysis-tools-for-hydra-videos)
   - [0. Dependencies](#0-dependencies)
   - [1. Find Midline](#1-find-midline)
     - [1.1 Full Body](#11-full-body)
