@@ -28,12 +28,21 @@ Requirements:
 Create a directory named as **data** under **hydracv/hydracv**, with the following architecture as well, for storing required and generated data.
 
 data
+
 ├─behaviors (results of classified behaviors)
+
 ├─contour (contour data)
+
 ├─fluorescence (extracted fluorescence)
+
 ├─length (extracted midline lengths)
+
 ├─manual_labels (manual labels of behaviors)
+
 ├─marker (files of DeepLabCut results)
+
 ├─midpoints (extracted midpoints)
+
 ├─objects (analyzer objects)
+
 └─videos (original videos)
