@@ -167,7 +167,7 @@ def find_midpoints(seg1, seg2, midpoints, nseg, ax=None):
         midpoints.append(midpoint[0])
         midpoints.append(midpoint[1])
 
-def extract_lengths(midpoints):
+def extract_lengths(midpoints, normalize=True):
     "Extract lengths from midpoints"
     midline_lens = []
     for midline in midpoints:
@@ -176,7 +176,10 @@ def extract_lengths(midpoints):
     maxlen = max(midline_lens)
     minlen = min(midline_lens)
 
-    res = [(x - minlen) / (maxlen - minlen) for x in midline_lens]
+    if normalize:
+        res = [(x - minlen) / (maxlen - minlen) for x in midline_lens]
+    else:
+        res = midline_lens
 
     return res
 
@@ -187,6 +190,9 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40, display=Fal
     contours = load_contour(file_contour)
     markers = load_marker(file_marker)
     midpoints_orig = load_midpoints(file_midpoints)
+
+    markers = markers[:]
+    contours = contours[7:]
 
     midlens = extract_lengths(midpoints_orig)
 

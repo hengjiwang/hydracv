@@ -10,7 +10,7 @@ from midline_new import *
 from tqdm import tqdm
 import cv2
 
-def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (1, 1), display=True):
+def pedunc_trace(file_icy, file_dlc, max_depth, video, scale = (1, 1), display=True):
     '''
     :return: an array of the integration of fluorescence for each frame of the video
     :rtype: list
@@ -113,8 +113,8 @@ def pedunc_trace(file_icy, file_dlc, max_depth , video, scale = (1, 1), display=
         # polypoints_x = polypoints_x[:int(length_points*0.2)+1] + polypoints_x[-int(length_points*0.2)-2:]
         # polypoints_y = polypoints_y[:int(length_points*0.2)+1] + polypoints_y[-int(length_points*0.2)-2:]
 
-        chk = np.where( np.array(seg1)[:,0] == polypoints_x[int(length_points*0.2)] )
-        chk1 = np.where( np.array(seg2)[:,0] == polypoints_x[-int(length_points*0.2)-2] )
+        chk = np.where( np.array(seg1)[:,0] == polypoints_x[int(length_points*0.3)] )
+        chk1 = np.where( np.array(seg2)[:,0] == polypoints_x[-int(length_points*0.3)-2] )
         seg1ind = int(chk[0][0])
         seg2ind = int(chk1[0][0])
         # print(type(np.array(seg1)[seg1ind:,0]))

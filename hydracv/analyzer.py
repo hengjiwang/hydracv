@@ -39,7 +39,7 @@ class Analyzer:
             self._peaks = []
             self._midline_len = []
             self._midpoints_pos = []
-            self.ped_flu = []
+            self._ped_flu = []
 
         def name(self):
             """Get the name of the video"""
@@ -544,7 +544,7 @@ class Analyzer:
 
 
     def _find_peaks_for_single(self, name, plot=True, height=0.1, wlen=100,
-                   prominence=0.025, min_cb_interval=10):
+                   prominence=0.025, min_cb_interval=10, realign=True):
         """Find the fluorescence peaks of the video with given name.
 
         Save the found peaks as the _peaks attribute of the video. And save the
@@ -571,7 +571,7 @@ class Analyzer:
         video.set_peaks(peaks)
 
         # Cluster peaks into different CB
-        peak_clusters = utils.cluster_peaks(peaks, min_cb_interval=min_cb_interval*video.fps(), realign=True)
+        peak_clusters = utils.cluster_peaks(peaks, min_cb_interval=min_cb_interval*video.fps(), realign=realign)
         video.set_peak_clusters(peak_clusters)
 
         if plot:
@@ -591,7 +591,7 @@ class Analyzer:
         plt.show()
 
     def find_peaks(self, name=None, plot=False, height=0.1, wlen=100,
-                   prominence=0.025, min_cb_interval=10):
+                   prominence=0.025, min_cb_interval=10, realign=True):
         """Find the fluorescence peaks of a list of videos.
 
         Save the found peaks as the _peaks attribute of the videos. And save the
@@ -618,7 +618,7 @@ class Analyzer:
         if type(name) != list:
             if type(name) == str:
                 self._find_peaks_for_single(name, plot, height, wlen,
-                                            prominence, min_cb_interval)
+                                            prominence, min_cb_interval, realign)
             else:
                 raise(TypeError("name can only be list or string!"))
 
@@ -626,7 +626,7 @@ class Analyzer:
             nvideos = len(name)
             for j in range(nvideos):
                 self._find_peaks_for_single(name[j], plot, height, wlen,
-                                            prominence, min_cb_interval)
+                                            prominence, min_cb_interval, realign)
 
     def _update_spike_trains_and_fps(self):
         """Update the _spike_trains and _fps of the Analyzer object."""
@@ -710,7 +710,7 @@ class Analyzer:
 
         del self._videos[name]
 
-    def plot_fluos_and_midline_lens(self, name=None):
+    def plot_fluos_and_midline_lens(self, name=None, start=0, end=-1):
         """Plot the fluorescence trace overlayed with midline lengths of the videos with given name.
 
         Args:
@@ -731,11 +731,11 @@ class Analyzer:
                 # Add fluo plots
                 ax = fig.add_subplot(1, 1, 1)
                 time_axis = np.linspace(0, video.numframes()/video.fps(), video.numframes())
-                disp.add_fluorescence(ax, time_axis, video.fluo_trace())
+                disp.add_fluorescence(ax, time_axis[start:end], video.fluo_trace()[start:end])
                 
                 # Add midline plots
                 ax2 = ax.twinx()
-                disp.add_midline_len(ax2, time_axis, video.midline_len)
+                disp.add_midline_len(ax2, time_axis[start:end], video.midline_len[start:end])
 
             else:
                 raise(TypeError("name can only be list or string!"))
@@ -748,9 +748,9 @@ class Analyzer:
                 video = self._videos[name[j]]
                 ax = fig.add_subplot(nvideos, 1, j+1)
                 time_axis = np.linspace(0, video.numframes()/video.fps(), video.numframes())
-                disp.add_fluorescence(ax, time_axis, video.fluo_trace())
+                disp.add_fluorescence(ax, time_axis[start:end], video.fluo_trace()[start:end])
                 ax2 = ax.twinx()
-                disp.add_midline_len(ax2, time_axis, video._midline_len())
+                disp.add_midline_len(ax2, time_axis[start:end], video._midline_len()[start:end])
         plt.show()
 
     def _add_midline_len(self, videoname, filepath):

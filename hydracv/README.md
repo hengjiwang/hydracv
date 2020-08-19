@@ -15,9 +15,6 @@ Requirements:
 
 -- _Fluorescence analysis (find peaks, cluster peaks, spike trains, ISI statistics)_
 
-Requirements:
-- Original video
-
 ### `classify_behaviors.ipynb`
 
 -- _Classify behaviors based on midline_

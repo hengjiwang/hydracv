@@ -109,7 +109,15 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
 
     # Load files
     contours = load_contour(file_contour)
+
+    print('Contour loaded, the size is: ' + str(len(contours)))
+
     markers = load_marker(file_marker).values
+
+    print('Markers loaded, the size is: ' + str(len(markers)))
+
+    markers = markers[:]
+    contours = contours[7:]
 
     midpoints_all = []
 
@@ -231,11 +239,11 @@ if __name__ == "__main__":
     #                          "../data/marker/Control-EGCaMP_exp1_a1_30x10fps_5%_001DLC_resnet50_EGCaMPFeb14shuffle1_576000.csv",
     #                          "/home/hengji/Documents/hydrafiles/videos/EGCaMP/Control-EGCaMP_exp1_a1_30x10fps.avi")
 
-    FILENAME = "0hr_Control_ngcampmov_30x4fps_50%intensity_exp3_a3"
+    FILENAME = "DynWat_16X_Animal16_30mins_Channal0_roi"
 
     midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
-                             "../data/marker/0hr_Control_ngcampmov_30x4fps_50%intensity_exp3_a3_enhanced_editDLC_resnet50_TTypectrlFeb26shuffle1_524000.csv",
-                             "")
+                             "../data/marker/DynWat_16X_Animal16_30minsDLC_resnet50_DynWat_16X_Animal16_30minsAug2shuffle1_285000.csv",
+                             "../data/videos/dual-channel/DynWat_16X_Animal16_30mins.avi", play=True)
 
     df = pd.DataFrame(midpoints)
     df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection.csv", index=False)

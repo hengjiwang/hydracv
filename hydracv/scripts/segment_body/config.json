@@ -1,11 +1,11 @@
 [{
-    "Name": "EndoRCaMP_ctrl_30mins_35x_10fps_79%intensity_mv6",
-    "IcyFilePath": "/home/shashank/Downloads/test_class/EndoRCaMP_ctrl_30mins_35x_10fps_79%intensity_mv6.xml",
-    "DeeplabcutFilePath": "/home/shashank/Downloads/test_class/EndoRCaMP_ctrl_30mins_35x_10fps_79%intensity_mv6.csv",
+    "Name": "Pre_Bisect_40x_4fps_ex4_ROIs",
+    "IcyFilePath": "/home/hengji/Documents/hydracv/hydracv/data/contour/Pre_Bisect_40x_4fps_ex4_ROIs.xml",
+    "DeeplabcutFilePath": "/home/hengji/Documents/hydracv/hydracv/data/marker/Pre_Bisect_40x_4fps_ex4DeepCut_resnet50_Hydra2Nov17shuffle1_1030000.csv",
     "MaxDepth": 3,
     "ScaleX": 1,
     "ScaleY": 1,
-    "VideoPath": "/home/shashank/Downloads/test_class/EndoRCaMP_ctrl_30mins_35x_10fps_79%intensity_mv6.avi",
+    "VideoPath": "/home/hengji/Documents/hydracv/hydracv/data/videos/NGCaMP/Pre_Bisect_40x_4fps_ex4.avi",
     "InterpolateMidlineNum": 10,
     "InterpolateContourNum": 10
 }]
