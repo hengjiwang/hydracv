@@ -66,7 +66,7 @@ def intp_seq(seq, nintp):
         yintp = np.linspace(y_prev, y_next, nintp, endpoint=False)
         for k in range(len(xintp)):
             seq_new.append((xintp[k], yintp[k]))
-    
+
     seq_new.append(seq[-1])
     return seq_new
 
@@ -80,7 +80,7 @@ def load_marker(filename):
                   'peduncle_x', 'peduncle_y', 'peduncle_likelihood']
     df = df.drop(index=[0, 1]).drop(columns='scorer').reset_index(drop=True)
     df = df.astype(float)
-    return df  
+    return df
 
 def locate_point(marker, contour):
     "Locate the corresponding index of the marker on contour"
@@ -104,6 +104,90 @@ def length_segment(seg):
 
     return length
 
+def extract_midline(contour, marker_mat, nseg=20, play=False):
+    # Reformat marker
+    marker = defaultdict(tuple)
+    marker['hypostome'] = (marker_mat[0], marker_mat[1])
+    marker['armpit1'] = (marker_mat[3], marker_mat[4])
+    marker['armpit2'] = (marker_mat[6], marker_mat[7])
+    marker['peduncle'] = (marker_mat[9], marker_mat[10])
+
+    # Locate the peduncle on contour
+    ind_ped = locate_point(marker['peduncle'], contour)
+
+    # Reindex the contour -- start from the peduncle
+    contour = contour[ind_ped:] + contour[:ind_ped]
+
+    # Locate other markers
+    ind_ped = 0
+    ind_arp1 = locate_point(marker['armpit1'], contour)
+    ind_arp2 = locate_point(marker['armpit2'], contour)
+    ind_hyp = locate_point(marker['hypostome'], contour)
+
+    # Separate contour to two parts
+    ind_arp1, ind_arp2 = min(ind_arp1, ind_arp2), max(ind_arp1, ind_arp2)
+    contour_half_1 = np.array(contour[:ind_arp1])
+    contour_half_2 = np.array([contour[0]] + contour[ind_arp2:][::-1])
+
+    if len(contour_half_1) == 0 or len(contour_half_2) == 0:
+        # continue
+        raise Exception("Half contour is 0")
+
+    # if play:
+    #     plt.plot(contour_half_1[:, 0], contour_half_1[:, 1], 'g.')
+    #     plt.plot(contour_half_2[:, 0], contour_half_2[:, 1], 'g.')
+
+    # if play:
+    #     contour = np.array(contour)
+    #     plt.plot(contour[:, 0], contour[:, 1], 'g.')
+
+    # plt.plot(contour[ind_arp1][0], contour[ind_arp1][1], 'b.', markersize=20)
+    # plt.plot(contour[ind_arp2][0], contour[ind_arp2][1], 'b.', markersize=20)
+    # plt.plot(contour[ind_hyp][0], contour[ind_hyp][1], 'r.', markersize=20)
+    # plt.plot(contour[ind_ped][0], contour[ind_ped][1], 'r.', markersize=20)
+
+    # plt.plot(marker['hypostome'][0], marker['hypostome'][1], 'g.', markersize=20)
+    # plt.plot(marker['armpit1'][0], marker['armpit1'][1], 'b.', markersize=20)
+    # plt.plot(marker['armpit2'][0], marker['armpit2'][1], 'b.', markersize=20)
+    # plt.plot(marker['peduncle'][0], marker['peduncle'][1], 'r.', markersize=20)
+
+
+    # Find the midpoints
+    midpoints = []
+    len_contour_1 = length_segment(contour_half_1)
+    len_contour_2 = length_segment(contour_half_2)
+    ind_seg_pt1 = 0
+    ind_seg_pt2 = 0
+    cum_len_1 = 0
+    cum_len_2 = 0
+
+    for j in range(1, nseg):
+
+        # Locate the segment points
+        while cum_len_1 < j/nseg * len_contour_1:
+            cum_len_1 += length_segment(contour_half_1[ind_seg_pt1:ind_seg_pt1+2])
+            ind_seg_pt1 += 1
+
+        while cum_len_2 < j/nseg * len_contour_2:
+            cum_len_2 += length_segment(contour_half_2[ind_seg_pt2:ind_seg_pt2+2])
+            ind_seg_pt2 += 1
+
+        seg_pt_1 = contour_half_1[ind_seg_pt1]
+        seg_pt_2 = contour_half_2[ind_seg_pt2]
+        if play:
+            plt.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'brown')
+        midpoint = ((seg_pt_1[0] + seg_pt_2[0]) // 2, (seg_pt_1[1] + seg_pt_2[1]) // 2)
+        midpoints.append(midpoint[0])
+        midpoints.append(midpoint[1])
+        if play:
+            plt.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
+
+    # plt.plot(contour[ind_hyp][0], contour[ind_hyp][1], 'r.', markersize=10)
+    midpoints.append(marker['hypostome'][0])
+    midpoints.append(marker['hypostome'][1])
+
+    return midpoints, contour_half_1, contour_half_2
+
 def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
     "Find midline"
 
@@ -116,33 +200,36 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
 
     print('Markers loaded, the size is: ' + str(len(markers)))
 
-    markers = markers[:]
-    contours = contours[7:]
+    missed_contour = [] # list(range(12096, 12145))
+    print('Number of missed contours is: ' + str(len(missed_contour)))
+
+    markers = [x for i,x in enumerate(markers) if i not in missed_contour]
+    # contours = contours[7:]
 
     midpoints_all = []
 
     # Align data
-    # nframes = min(len(contours), len(markers))
+    nframes = min(len(contours), len(markers))
     # contours = contours[:nframes]
     # markers = markers[:nframes].values
 
-    if play:
-        plt.figure()
-
     # Loop over frames
-    # for iframe in range(nframes):
+    # for iframe in tqdm(range(nframes)):
 
     # cap = cv2.VideoCapture(file_video)
     # ret, frame = cap.read()
     # ny, nx, _ = frame.shape
 
+    # if play:
+    #     plt.figure(figsize=(nx/50, ny/50))
+
     # iframe = 0
     # while(ret):
 
     for iframe in tqdm(range(len(contours))):
-        
-        if play:
-            plt.clf()
+
+        # if play:
+        #     plt.clf()
 
         # plt.imshow(frame)
 
@@ -150,119 +237,42 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
         contour = contours[iframe]
         marker_mat = markers[iframe]
 
-        # Reformat marker
-        marker = defaultdict(tuple)
-        marker['hypostome'] = (marker_mat[0], marker_mat[1])
-        marker['armpit1'] = (marker_mat[3], marker_mat[4])
-        marker['armpit2'] = (marker_mat[6], marker_mat[7])
-        marker['peduncle'] = (marker_mat[9], marker_mat[10])
+        midpoints, _, _ = extract_midline(contour, marker_mat, nseg, play)
 
-        # Locate the peduncle on contour
-        ind_ped = locate_point(marker['peduncle'], contour)
+        # plt.plot(midpoints[::2], midpoints[1::2], 'r-')
 
-        # Reindex the contour -- start from the peduncle
-        contour = contour[ind_ped:] + contour[:ind_ped]
-
-        # Locate other markers
-        ind_ped = 0
-        ind_arp1 = locate_point(marker['armpit1'], contour)
-        ind_arp2 = locate_point(marker['armpit2'], contour)
-        ind_hyp = locate_point(marker['hypostome'], contour)
-
-        # Separate contour to two parts
-        ind_arp1, ind_arp2 = min(ind_arp1, ind_arp2), max(ind_arp1, ind_arp2)
-        contour_half_1 = np.array(contour[:ind_arp1])
-        contour_half_2 = np.array([contour[0]] + contour[ind_arp2:][::-1])
-
-        if len(contour_half_1) == 0 or len(contour_half_2) == 0:
-            continue
-        
-        if play:
-            plt.plot(contour_half_1[:, 0], contour_half_1[:, 1], 'g.')
-            plt.plot(contour_half_2[:, 0], contour_half_2[:, 1], 'b.')
-
-        # plt.plot(contour[ind_arp1][0], contour[ind_arp1][1], 'y.', markersize=20)
-        # plt.plot(contour[ind_arp2][0], contour[ind_arp2][1], 'y.', markersize=20)
-        # plt.plot(contour[ind_hyp][0], contour[ind_hyp][1], 'y.', markersize=20)
-        # plt.plot(contour[ind_ped][0], contour[ind_ped][1], 'y.', markersize=20)
-
-        # plt.plot(marker['hypostome'][0], marker['hypostome'][1], 'b.', markersize=20)
-        # plt.plot(marker['armpit1'][0], marker['armpit1'][1], 'b.', markersize=20)
-        # plt.plot(marker['armpit2'][0], marker['armpit2'][1], 'b.', markersize=20)
-        # plt.plot(marker['peduncle'][0], marker['peduncle'][1], 'b.', markersize=20)
-
-
-        # Find the midpoints
-        midpoints = []
-        len_contour_1 = length_segment(contour_half_1)
-        len_contour_2 = length_segment(contour_half_2)
-        ind_seg_pt1 = 0
-        ind_seg_pt2 = 0
-        cum_len_1 = 0
-        cum_len_2 = 0
-        for j in range(1, nseg):
-            
-            # Locate the segment points
-            while cum_len_1 < j/nseg * len_contour_1:
-                cum_len_1 += length_segment(contour_half_1[ind_seg_pt1:ind_seg_pt1+2])
-                ind_seg_pt1 += 1
-
-            while cum_len_2 < j/nseg * len_contour_2:
-                cum_len_2 += length_segment(contour_half_2[ind_seg_pt2:ind_seg_pt2+2])
-                ind_seg_pt2 += 1
-
-            seg_pt_1 = contour_half_1[ind_seg_pt1]
-            seg_pt_2 = contour_half_2[ind_seg_pt2]
-            if play:
-                plt.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'r')
-            midpoint = ((seg_pt_1[0] + seg_pt_2[0]) // 2, (seg_pt_1[1] + seg_pt_2[1]) // 2)
-            midpoints.append(midpoint[0])
-            midpoints.append(midpoint[1])
-            if play:
-                plt.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
-        
-        if play:
-            plt.xlim(0, 500)
-            plt.ylim(0, 500)
-            plt.pause(0.001)
+        # if play:
+        #     plt.xlim(0, nx)
+        #     plt.ylim(0, ny)
+        #     plt.pause(0.001)
 
         # ret, frame = cap.read()
         # iframe += 1
 
+        # print(iframe)
+
         midpoints_all.append(midpoints)
+
+        # plt.xticks([])
+        # plt.yticks([])
+
+        # plt.savefig('../img'+str(iframe)+'.jpg', bbox_inches='tight')
+
+        # input()
 
 
     return midpoints_all
 
 if __name__ == "__main__":
-    # midpoints = find_midline("../data/contour/Control-EGCaMP_exp1_a1_30x10fps_5%.xml",
-    #                          "../data/marker/Control-EGCaMP_exp1_a1_30x10fps_5%_001DLC_resnet50_EGCaMPFeb14shuffle1_576000.csv",
-    #                          "/home/hengji/Documents/hydrafiles/videos/EGCaMP/Control-EGCaMP_exp1_a1_30x10fps.avi")
 
-    FILENAME = "DynWat_16X_Animal16_30mins_Channal0_roi"
+    FILENAME = "Pre_Bisect_40x_4fps_ex4_1100-3040_enhanced"
 
-    midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
-                             "../data/marker/DynWat_16X_Animal16_30minsDLC_resnet50_DynWat_16X_Animal16_30minsAug2shuffle1_285000.csv",
-                             "../data/videos/dual-channel/DynWat_16X_Animal16_30mins.avi", play=True)
+    midpoints = find_midline("../data/contour/Pre_Bisect_40x_4fps_ex4.xml",
+                             "../data/marker/Pre_Bisect_40x_4fps_ex4DeepCut_resnet50_Hydra2Nov17shuffle1_1030000.csv",
+                             "../data/videos/NGCaMP/Pre_Bisect_40x_4fps_ex4_1100-3040_enhanced.avi",
+                             nseg=20,
+                             play=False)
 
     df = pd.DataFrame(midpoints)
-    df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection.csv", index=False)
-
-    # FILENAME = "Pre_Bisect_40x_4fps_ex4"
-
-    # midpoints = find_midline("../data/contour/Pre_Bisect_40x_4fps_ex4_ROIs.xml",
-    #                          "../data/marker/Pre_Bisect_40x_4fps_ex4DeepCut_resnet50_Hydra2Nov17shuffle1_1030000.csv",
-    #                          "")
-
-    # df = pd.DataFrame(midpoints)
-    # df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection.csv", index=False)
-
-    # FILENAME = "Control-EGCaMP_exp1_a2_25x10fps_30mins"
-
-    # midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
-    #                          "../data/marker/Control-EGCaMP_exp1_a2_25x10fps_30minsDLC_resnet50_LType-Ctrl2Mar24shuffle1_360000.csv",
-    #                          "")
-
-    # df = pd.DataFrame(midpoints)
-    # df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection.csv", index=False)
+    df.to_csv("../data/midpoints/midpoints_"+FILENAME+".csv", index=False)
 

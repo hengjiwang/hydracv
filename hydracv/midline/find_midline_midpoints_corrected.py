@@ -71,7 +71,7 @@ def load_midpoints(filename):
     data = pd.read_csv(filename).values
     nframes = len(data)
     npoints = len(data[0]) // 2
-    
+
     for i in range(nframes):
         midpoints.append([])
         for j in range(npoints):
@@ -142,7 +142,7 @@ def find_midpoints(seg1, seg2, midpoints, nseg, ax=None):
     cum_len_1 = 0
     cum_len_2 = 0
     for j in range(1, nseg):
-        
+
         # Locate the segment points
         while cum_len_1 <= j/nseg * len_contour_1:
             cum_len_1 += length_segment(seg1[ind_seg_pt1:ind_seg_pt1+2])
@@ -191,8 +191,13 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40, display=Fal
     markers = load_marker(file_marker)
     midpoints_orig = load_midpoints(file_midpoints)
 
-    markers = markers[:]
-    contours = contours[7:]
+    missed_contour = list(range(12096, 12145))
+    markers = [x for i,x in enumerate(markers) if i not in missed_contour]
+
+    # markers = markers[:]
+    # contours = contours[7:]
+
+    print(len(contours), len(markers))
 
     midlens = extract_lengths(midpoints_orig)
 
@@ -207,7 +212,7 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40, display=Fal
         ax = None
 
     for iframe in tqdm(range(len(contours))):
-        
+
         if display:
             ax.clear()
 
@@ -260,7 +265,7 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40, display=Fal
         # Locate the middle segment point on the other side
 
         ind_mid_2 = locate_point(pt_mid_1, contour_half_2)
-        
+
         criteria = midlen > 0.3
 
         if not criteria:
@@ -294,11 +299,11 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40, display=Fal
         midpoints_all.append(midpoints)
 
         # ax.plot([pt_mid_1[0], pt_mid_2[0]], [pt_mid_1[1], pt_mid_2[1]], 'k')
-        
+
         mid_mid_pt = middle_point(pt_mid_1, pt_mid_2)
 
         # ax.plot(mid_mid_pt[0], mid_mid_pt[1], 'k', marker='.', markersize=10)
-        
+
         if display:
             ax.plot(contour_half_11[:,0], contour_half_11[:,1], 'g.', markersize=5)
             ax.plot(contour_half_12[:,0], contour_half_12[:,1], 'k.', markersize=5)
@@ -352,11 +357,11 @@ if __name__ == "__main__":
     # df = pd.DataFrame(midpoints)
     # df.to_csv("./results/" + FILENAME + "/midpoints/midpoints_bisection_corrected.csv", index=False)
 
-    FILENAME = "Control-EGCaMP_exp1_a2_25x10fps_30mins"
+    FILENAME = "Pre_Bisect_40x_4fps_ex3"
 
     midpoints = find_midline("../data/contour/" + FILENAME + ".xml",
-                             "../data/marker/Control-EGCaMP_exp1_a2_25x10fps_30minsDLC_resnet50_LType-Ctrl2Mar24shuffle1_360000.csv",
-                             "./results/" + FILENAME + "/midpoints/midpoints_bisection.csv",
+                             "../data/marker/Pre_Bisect_40x_4fps_ex3DeepCut_resnet50_Hydra2Nov15shuffle1_197000.csv",
+                             "../data/midpoints/" + FILENAME + "_midpoints.csv",
                              display=True)
 
     df = pd.DataFrame(midpoints)

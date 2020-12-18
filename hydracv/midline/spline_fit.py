@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.rcParams["backend"] = "TkAgg"
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import interpolate
@@ -23,7 +25,7 @@ def curvature(x, y):
     "Returns the curvature of three points, referring to https://github.com/Pjer-zhang/PJCurvature/blob/master/src/py/PJcurvature.py"
     t_a = LA.norm([x[1]-x[0], y[1]-y[0]])
     t_b = LA.norm([x[2]-x[1], y[2]-y[1]])
-    
+
     M = np.array([
         [1, -t_a, t_a**2],
         [1, 0, 0],
@@ -61,10 +63,10 @@ def fit(filename, display=True):
     meancurvs = []
 
     if display:
-        fig = plt.figure(figsize=(6, 6))
+        fig = plt.figure(figsize=(10, 10))
 
 
-    for iframe in tqdm(range(len(midpoints))):
+    for iframe in tqdm(range(3100, len(midpoints))):
 
         line = midpoints[iframe]
 
@@ -79,6 +81,7 @@ def fit(filename, display=True):
         # Fit the splines
         tck, u = interpolate.splprep([x, y])
         xnew, ynew = interpolate.splev(np.linspace(0, 1, 200), tck)
+        # xnew, ynew = interpolate.splev(np.linspace(0, 1, 100), tck)
         splines.append([xnew, ynew])
 
         # Calculate the curvatures and norms
@@ -101,20 +104,29 @@ def fit(filename, display=True):
             plt.quiver(xnew[1:len(xnew)-2:gap], ynew[1:len(ynew)-2:gap], (ka*no[:, 0])[::gap], (ka*no[:, 1])[::gap], width=0.002, headwidth=3, headlength=5, scale=1.5)
             plt.text(280, 380, "Max Abs. Curv. = " + str(round(maxcur, 4)), color='k', fontsize=10)
             plt.text(280, 360, "Avg Abs. Curv. = " + str(round(meancur, 4)), color='k', fontsize=10)
-            plt.xlim([100, 400])
-            plt.ylim([100, 400])
-            plt.savefig('./results/'+ 'Control-EGCaMP_exp1_a1_30x10fps' +'/frames/img' + str(iframe) + '.jpg', dpi=200) # , orientation='landscape')
+            plt.xlim([0, 600])
+            plt.ylim([0, 600])
+            # plt.xlim([-3, 3])
+            # plt.ylim([-3, 3])
+            # plt.savefig('./results/'+ 'Control-EGCaMP_exp1_a1_30x10fps' +'/frames/img' + str(iframe) + '.jpg', dpi=200) # , orientation='landscape')
             plt.pause(0.00001)
+            input()
 
     # Return results
     return (np.array(maxcurvs), np.array(meancurvs))
 
 if __name__ == "__main__":
-    maxcurvs, meancurvs = fit("./results/Control-EGCaMP_exp1_a1_30x10fps/midpoints/midpoints_bisection_corrected.csv", display=True)
+    # maxcurvs, meancurvs = fit("./results/Control-EGCaMP_exp1_a1_30x10fps/midpoints/midpoints_bisection_corrected.csv", display=True)'
+    FILENAME = 'Pre_Bisect_40x_4fps_ex3'
+    maxcurvs, meancurvs = fit("../data/midpoints/midpoints_"+FILENAME+".csv", display=True)
 
     # df = pd.DataFrame(splines)
     # df.to_csv('./results/Control-EGCaMP_exp1_a1_30x10fps/splines/splines.csv')
+    # Save the curvatures
+    FILE = "../data/curvatures/maxcurv_" + FILENAME + ".csv"
     df = pd.DataFrame(maxcurvs)
-    df.to_csv('./results/Control-EGCaMP_exp1_a1_30x10fps/splines/maxcurvs.csv')
+    df.to_csv(FILE, index=False)
+
+    FILE = "../data/curvatures/meancurv_" + FILENAME + ".csv"
     df = pd.DataFrame(meancurvs)
-    df.to_csv('./results/Control-EGCaMP_exp1_a1_30x10fps/splines/meancurvs.csv')
+    df.to_csv(FILE, index=False)
