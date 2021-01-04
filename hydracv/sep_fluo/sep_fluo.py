@@ -1,6 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib
+matplotlib.use('QT5Agg')
+import matplotlib.pyplot as plt
 import pandas as pd
 import sys, csv, os
 import cv2
@@ -13,14 +14,16 @@ import hydracv.utils.utils as utils
 from hydracv.midline.find_midline_midpoints import extract_midline
 
 
-def sep_fluo(file_icy, file_dlc, videopath, display=False, start=0, end=-1):
+def sep_fluo(file_icy, file_dlc, videopath, display=False, start=0, end=-1, scale=(1,1)):
     "Separate fluorescence to four quarters"
 
     trace1, trace2, trace3, trace4 = [], [], [], []
+    area1, area2, area3, area4 = [], [], [], []
+    avg1, avg2, avg3, avg4 = [], [], [], []
     fluos = []
 
     # Load contours and markers
-    contours, markers = utils.load_contours_markers(file_icy, file_dlc, scale=(1,1))
+    contours, markers = utils.load_contours_markers(file_icy, file_dlc, scale=scale)
     markers = markers.values
 
     # Loop over frames
@@ -65,18 +68,30 @@ def sep_fluo(file_icy, file_dlc, videopath, display=False, start=0, end=-1):
 
         # Handle frame and calculate fluorescence
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if scale == (2,2):
+            frame = frame[::2]
+            frame = [x[::2] for x in frame]
         fluo1, fluo2, fluo3, fluo4 = 0, 0, 0, 0
         cframe1, cframe2, cframe3, cframe4 = np.zeros_like(frame), np.zeros_like(frame), np.zeros_like(frame), np.zeros_like(frame)
         cv2.fillPoly(cframe1, poly1, 1)
         cv2.fillPoly(cframe2, poly2, 1)
         cv2.fillPoly(cframe3, poly3, 1)
         cv2.fillPoly(cframe4, poly4, 1)
+        a1, a2, a3, a4 = np.sum(cframe1), np.sum(cframe2), np.sum(cframe3), np.sum(cframe4)
+        area1.append(a1)
+        area2.append(a2)
+        area3.append(a3)
+        area4.append(a4)
         cframe1, cframe2, cframe3, cframe4 = cframe1 * frame, cframe2 * frame, cframe3 * frame, cframe4 * frame
         fluo1, fluo2, fluo3, fluo4 = np.sum(cframe1), np.sum(cframe2), np.sum(cframe3), np.sum(cframe4)
         trace1.append(fluo1)
         trace2.append(fluo2)
         trace3.append(fluo3)
         trace4.append(fluo4)
+        avg1.append(fluo1/a1)
+        avg2.append(fluo2/a2)
+        avg3.append(fluo3/a3)
+        avg4.append(fluo4/a4)
         fluos.append(np.sum(frame))
 
         # Plot
@@ -94,34 +109,61 @@ def sep_fluo(file_icy, file_dlc, videopath, display=False, start=0, end=-1):
             # plt.plot(midmid[0], midmid[1], 'k.')
             # plt.plot(midpoints[index][0], midpoints[index][1], 'g.')
 
-            plt.fill(poly1_[:,0], poly1_[:,1], alpha = 0.5, color='g')
-            plt.fill(poly2_[:,0], poly2_[:,1], alpha = 0.5, color='b')
-            plt.fill(poly3_[:,0], poly3_[:,1], alpha = 0.5, color='r')
-            plt.fill(poly4_[:,0], poly4_[:,1], alpha = 0.5, color='y')
+            plt.fill(poly1_[:,0], poly1_[:,1], alpha = 0.5, color='b')
+            plt.fill(poly2_[:,0], poly2_[:,1], alpha = 0.5, color='orange')
+            plt.fill(poly3_[:,0], poly3_[:,1], alpha = 0.5, color='g')
+            plt.fill(poly4_[:,0], poly4_[:,1], alpha = 0.5, color='r')
 
             plt.xlim(0, len(frame[0]))
             plt.ylim(0, len(frame))
             plt.pause(0.0001)
 
-    plt.show()
     # Plot intensities
     fig = plt.figure()
-    plt.plot(trace1)
-    plt.plot(trace2)
-    plt.plot(trace3)
-    plt.plot(trace4)
-    plt.plot([trace1[i] + trace2[i] + trace3[i] + trace4[i] for i in range(len(trace1))], 'k', linewidth=4)
-    pickle.dump(fig, open("../data/figures/sep_fluo.fig.pickle", 'wb'))
-    plt.show()
-    plt.figure()
-    plt.plot(fluos, 'g', linewidth=4)
-    plt.show()
+    ax1 = fig.add_subplot(221)
+    ax1.plot(trace1, linewidth=0.5)
+    ax1.plot(trace2, linewidth=0.5)
+    ax1.plot(trace3, linewidth=0.5)
+    ax1.plot(trace4, linewidth=0.5)
+    ax1.plot([trace1[i] + trace2[i] + trace3[i] + trace4[i] for i in range(len(trace1))], 'k', linewidth=1)
+    ax1.tick_params(axis='both', which='major', labelsize=4)
+    ax1.set_title('Fluorescence', fontsize=6, fontweight='bold')
+    ax2 = fig.add_subplot(222)
+    ax2.plot(fluos, 'g', linewidth=0.5)
+    ax2.tick_params(axis='both', which='major', labelsize=4)
+    ax3 = fig.add_subplot(223)
+    ax3.plot(area1, linewidth=0.5)
+    ax3.plot(area2, linewidth=0.5)
+    ax3.plot(area3, linewidth=0.5)
+    ax3.plot(area4, linewidth=0.5)
+    ax3.tick_params(axis='both', which='major', labelsize=4)
+    ax3.set_title('Areas', fontsize=6, fontweight='bold')
+    ax4 = fig.add_subplot(224)
+    ax4.plot(avg1, linewidth=0.5)
+    ax4.plot(avg2, linewidth=0.5)
+    ax4.plot(avg3, linewidth=0.5)
+    ax4.plot(avg4, linewidth=0.5)
+    ax4.plot([avg1[i] + avg2[i] + avg3[i] + avg4[i] for i in range(len(avg1))], 'k', linewidth=1)
+    ax4.tick_params(axis='both', which='major', labelsize=4)
+    ax4.set_title('Averages', fontsize=6, fontweight='bold')
+    filename = videopath.split('.avi')[0].split('/')[-1]
+    pickle.dump(fig, open("../data/figures/sep_fluo_" + filename + ".fig.pickle", 'wb'))
+    plt.close()
 
+    return trace1, trace2, trace3, trace4
+
+def read_paths(filename):
+    df = pd.read_json('../data/config.json')
+    file_icy, file_dlc, videopath = df[filename].file_icy, df[filename].file_dlc, df[filename].videopath
+    return file_icy, file_dlc, videopath
 
 if __name__ == '__main__':
-    sep_fluo("../data/contour/Pre_Bisect_40x_4fps_ex3.xml",
-             "../data/marker/Pre_Bisect_40x_4fps_ex3DeepCut_resnet50_Hydra2Nov15shuffle1_197000.csv",
-             "../data/videos/NGCaMP/Pre_Bisect_40x_4fps_ex3.avi",
+    FILENAME = "Pre_Bisect_40x_4fps_ex3"
+    file_icy, file_dlc, videopath = read_paths(FILENAME)
+    sep_fluo(file_icy,
+             file_dlc,
+             videopath,
              display=True,
-             start=300,
-             end=-1)
+             start=0,
+             end=-1,
+             scale=(1,1))

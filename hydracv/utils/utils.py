@@ -303,6 +303,7 @@ def interpolate(start, end, nintp):
 def midpoint_of(segment):
     length = length_segment(segment)
     next_len = 0
+    curr_len = 0
     for j in range(1, len(segment)):
         prev = segment[j-1]
         next = segment[j]
@@ -311,8 +312,8 @@ def midpoint_of(segment):
         if next_len > length / 2:
             index = j-1
             break
-        else:
-            curr_len = next_len
+        # else:
+        curr_len = next_len
 
     pts = interpolate(prev, next, 20)
     for j in range(1, len(pts)):
