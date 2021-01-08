@@ -263,7 +263,7 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
 
 if __name__ == "__main__":
 
-    FILENAME = "Pre_Bisect_40x_4fps_ex4_1100-3040_enhanced"
+    FILENAME = "Pre_Bisect_40x_4fps_ex4"
 
     midpoints = find_midline("../data/contour/Pre_Bisect_40x_4fps_ex4.xml",
                              "../data/marker/Pre_Bisect_40x_4fps_ex4DeepCut_resnet50_Hydra2Nov17shuffle1_1030000.csv",

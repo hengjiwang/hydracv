@@ -133,24 +133,6 @@ def extract_midline(contour, marker_mat, nseg=20, play=False):
         # continue
         raise Exception("Half contour is 0")
 
-    # if play:
-    #     plt.plot(contour_half_1[:, 0], contour_half_1[:, 1], 'g.')
-    #     plt.plot(contour_half_2[:, 0], contour_half_2[:, 1], 'g.')
-
-    # if play:
-    #     contour = np.array(contour)
-    #     plt.plot(contour[:, 0], contour[:, 1], 'g.')
-
-    # plt.plot(contour[ind_arp1][0], contour[ind_arp1][1], 'b.', markersize=20)
-    # plt.plot(contour[ind_arp2][0], contour[ind_arp2][1], 'b.', markersize=20)
-    # plt.plot(contour[ind_hyp][0], contour[ind_hyp][1], 'r.', markersize=20)
-    # plt.plot(contour[ind_ped][0], contour[ind_ped][1], 'r.', markersize=20)
-
-    # plt.plot(marker['hypostome'][0], marker['hypostome'][1], 'g.', markersize=20)
-    # plt.plot(marker['armpit1'][0], marker['armpit1'][1], 'b.', markersize=20)
-    # plt.plot(marker['armpit2'][0], marker['armpit2'][1], 'b.', markersize=20)
-    # plt.plot(marker['peduncle'][0], marker['peduncle'][1], 'r.', markersize=20)
-
 
     # Find the midpoints
     midpoints = []
@@ -174,15 +156,10 @@ def extract_midline(contour, marker_mat, nseg=20, play=False):
 
         seg_pt_1 = contour_half_1[ind_seg_pt1]
         seg_pt_2 = contour_half_2[ind_seg_pt2]
-        if play:
-            plt.plot([seg_pt_1[0], seg_pt_2[0]], [seg_pt_1[1], seg_pt_2[1]], 'brown')
         midpoint = ((seg_pt_1[0] + seg_pt_2[0]) // 2, (seg_pt_1[1] + seg_pt_2[1]) // 2)
         midpoints.append(midpoint[0])
         midpoints.append(midpoint[1])
-        if play:
-            plt.plot(midpoint[0], midpoint[1], 'r.', markersize=10)
 
-    # plt.plot(contour[ind_hyp][0], contour[ind_hyp][1], 'r.', markersize=10)
     midpoints.append(marker['hypostome'][0])
     midpoints.append(marker['hypostome'][1])
 
@@ -213,63 +190,24 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
     # contours = contours[:nframes]
     # markers = markers[:nframes].values
 
-    # Loop over frames
-    # for iframe in tqdm(range(nframes)):
-
-    # cap = cv2.VideoCapture(file_video)
-    # ret, frame = cap.read()
-    # ny, nx, _ = frame.shape
-
-    # if play:
-    #     plt.figure(figsize=(nx/50, ny/50))
-
-    # iframe = 0
-    # while(ret):
-
     for iframe in tqdm(range(len(contours))):
-
-        # if play:
-        #     plt.clf()
-
-        # plt.imshow(frame)
 
         # Extract contour and marker
         contour = contours[iframe]
         marker_mat = markers[iframe]
 
         midpoints, _, _ = extract_midline(contour, marker_mat, nseg, play)
-
-        # plt.plot(midpoints[::2], midpoints[1::2], 'r-')
-
-        # if play:
-        #     plt.xlim(0, nx)
-        #     plt.ylim(0, ny)
-        #     plt.pause(0.001)
-
-        # ret, frame = cap.read()
-        # iframe += 1
-
-        # print(iframe)
-
         midpoints_all.append(midpoints)
-
-        # plt.xticks([])
-        # plt.yticks([])
-
-        # plt.savefig('../img'+str(iframe)+'.jpg', bbox_inches='tight')
-
-        # input()
-
 
     return midpoints_all
 
 if __name__ == "__main__":
 
-    FILENAME = "Pre_Bisect_40x_4fps_ex4_1100-3040_enhanced"
+    FILENAME = "Pre_Bisect_40x_4fps_ex4"
 
     midpoints = find_midline("../data/contour/Pre_Bisect_40x_4fps_ex4.xml",
                              "../data/marker/Pre_Bisect_40x_4fps_ex4DeepCut_resnet50_Hydra2Nov17shuffle1_1030000.csv",
-                             "../data/videos/NGCaMP/Pre_Bisect_40x_4fps_ex4_1100-3040_enhanced.avi",
+                             "../data/videos/NGCaMP/Pre_Bisect_40x_4fps_ex4.avi",
                              nseg=20,
                              play=False)
 
