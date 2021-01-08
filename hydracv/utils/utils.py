@@ -10,22 +10,22 @@ import scipy.signal
 import utils.disp as disp
 import xml.etree.ElementTree as ET
 
-def find_peaks(seq, height=0.1, wlen=100, prominence=0.025, min_cb_interval=10, realign=True, start=0, end=-1):
+def find_peaks(seq, height=0.1, wlen=100, prominence=0.025, min_cb_interval=10, realign=True, start=0, end=-1, display=True):
     "Find peaks of seq"
     orig_seq = seq
     seq = normalize(seq)
     peaks, _ = scipy.signal.find_peaks(seq, height=height, wlen=wlen, prominence=prominence)
 
-    fig = plt.figure(figsize=(20, 3))
-    ax = fig.add_subplot(1, 1, 1)
-    disp.add_fluorescence(ax, range(len(orig_seq)), orig_seq)
-    disp.add_peaks(ax, peaks, orig_seq, 1)
-
     if end == -1:
         end = len(seq)
-    ax.set_xlim(start, end)
 
-    plt.show()
+    if display:
+        fig = plt.figure(figsize=(20, 3))
+        ax = fig.add_subplot(1, 1, 1)
+        disp.add_fluorescence(ax, range(len(orig_seq)), orig_seq)
+        disp.add_peaks(ax, peaks, orig_seq, 1)
+        ax.set_xlim(start, end)
+        plt.show()
 
     return np.array([x for x in peaks if start < x < end])
 
