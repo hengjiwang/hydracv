@@ -10,19 +10,19 @@ import cv2
 import glob
 
 # Save video
-FILENAME = "spikes_658838"
-FPS = 40
-NUMX = 1280
-NUMY = 660
+FILENAME = "238705_2"
+FPS = 10
+NUMX = 600
+NUMY = 650
 
 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-videoWriter = cv2.VideoWriter('E:/hydra/hydra/visualizer/data/'+ FILENAME + '.avi', fourcc, FPS, (NUMX, NUMY))
+videoWriter = cv2.VideoWriter('/home/hengji/Data/hydracv/hydracv/data/frames/'+ FILENAME + '.avi', fourcc, FPS, (NUMX, NUMY))
 
-for iframe in tqdm(range(251)):
-    frame = cv2.imread('E:/hydra/hydra/visualizer/data/spikes_658838/img' + str(iframe) + '.jpg')
-    videoWriter.write(frame)
-# for img in glob.glob("./data/frames/spikes_658838/*.jpg"):
-#     frame = cv2.imread(img)
+# for iframe in tqdm(range(251)):
+#     frame = cv2.imread('/home/hengji/Data/hydracv/hydracv/data/frames/' + FILENAME + '/img' + str(iframe) + '.png')
 #     videoWriter.write(frame)
+for img in glob.glob("/home/hengji/Data/hydracv/hydracv/data/frames/" + FILENAME + "/*.png"):
+    frame = cv2.imread(img)
+    videoWriter.write(frame[500:1150, 500:1100])
 videoWriter.release()
 cv2.destroyAllWindows()

@@ -1,5 +1,5 @@
 import sys, os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.abspath(''), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.abspath(''), '../..')))
 
 import numpy as np
 import numpy.linalg as LA
@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.ndimage
 import scipy.signal
-import utils.disp as disp
+import hydracv.utils.disp as disp
 import xml.etree.ElementTree as ET
 
 def find_peaks(seq, height=0.1, wlen=100, prominence=0.025, min_cb_interval=10, realign=True, start=0, end=-1, display=True):
