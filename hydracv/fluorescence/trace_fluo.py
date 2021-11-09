@@ -4,12 +4,17 @@ from cv2 import cv2
 import sys, os
 import pandas as pd
 
-def trace(video, display=True):
+def trace(video, contours=[], display=True):
     '''
+    :inputs:
+        video: original video
+        contours: list of contours for each frame of video (output from find_midline_midpoints.load_contour)
+        display: boolean specifying whether you want to visualize results
+  
     :return: an array of the integration of fluorescence for each frame of the video
     :rtype: list
     '''
-
+    
     intensities_ = []
     cap = cv2.VideoCapture(video)
     firstf = True
@@ -22,15 +27,30 @@ def trace(video, display=True):
             if firstf:
                 size = len(frame) * len(frame[0])
                 firstf = False
+                
             # Our operations on the frame come here
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            
+            if contours:
+                # There may be fewer contours than total number of frames in video
+                if iframe == len(contours):
+                    break
+                    
+                curr_contour = contours[iframe]
+                # Create a mask that keeps only pixels w/in hydra contour
+                contour_mask = np.ones(frame.shape)
+                poly = np.array(curr_contour, dtype=np.int32)
+                cv2.fillConvexPoly(contour_mask,poly,0)
+ 
+                frame = np.ma.masked_array(frame, mask=contour_mask)
+    
             intensity = np.sum(frame)
-
             intensities_.append(intensity)
 
             # Display the resulting frame
             if display:
-                cv2.imshow('frame', frame)
+                plt.imshow(frame)
+                plt.show()
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         else:
