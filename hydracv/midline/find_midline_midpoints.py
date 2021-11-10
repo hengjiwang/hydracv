@@ -190,7 +190,7 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
     # contours = contours[:nframes]
     # markers = markers[:nframes].values
 
-    for iframe in tqdm(range(len(contours))):
+    for iframe in tqdm(range(nframes)):
 
         # Extract contour and marker
         contour = contours[iframe]
