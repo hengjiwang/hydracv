@@ -130,8 +130,8 @@ def extract_midline(contour, marker_mat, nseg=20, play=False):
     contour_half_2 = np.array([contour[0]] + contour[ind_arp2:][::-1])
 
     if len(contour_half_1) == 0 or len(contour_half_2) == 0:
-        # continue
-        raise Exception("Half contour is 0")
+        # DLC markers are inaccurate; e.g. the armpit markers are on top of each other
+        raise Exception("Half contour is 0.")
 
 
     # Find the midpoints
@@ -195,8 +195,12 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
         # Extract contour and marker
         contour = contours[iframe]
         marker_mat = markers[iframe]
-
-        midpoints, _, _ = extract_midline(contour, marker_mat, nseg, play)
+        try:
+            midpoints, _, _ = extract_midline(contour, marker_mat, nseg, play)
+        except Exception as excep:
+            print(f'Unable to calculate midline for frame {iframe}.')
+            # Can't accurately calculate midpoints, so pass in empty lists as placeholders
+            midpoints, _, _ = [],[],[]
         midpoints_all.append(midpoints)
 
     return midpoints_all
