@@ -19,6 +19,7 @@ def trace(video, contours=[], display=True):
     cap = cv2.VideoCapture(video)
     firstf = True
     iframe = 0
+
     while True:
         # Capture frame-by-frame
         ret, frame = cap.read()
@@ -37,14 +38,17 @@ def trace(video, contours=[], display=True):
                     break
                     
                 curr_contour = contours[iframe]
-                # Create a mask that keeps only pixels w/in hydra contour
-                contour_mask = np.ones(frame.shape)
-                poly = np.array(curr_contour, dtype=np.int32)
-                cv2.fillConvexPoly(contour_mask,poly,0)
- 
-                frame = np.ma.masked_array(frame, mask=contour_mask)
-    
-            intensity = np.sum(frame)
+                
+                if not curr_contour:
+                    print(f'No polygon found; setting intensity to 0 for {iframe}.')
+                    intensity = 0
+                else:
+                    # Create a mask that keeps only pixels w/in hydra contour
+                    contour_mask = np.ones(frame.shape)
+                    poly = np.array(curr_contour, dtype=np.int32)
+                    cv2.fillConvexPoly(contour_mask,poly,0)
+                    frame = np.ma.masked_array(frame, mask=contour_mask)
+                    intensity = np.sum(frame)
             intensities_.append(intensity)
 
             # Display the resulting frame
