@@ -4,11 +4,11 @@ from cv2 import cv2
 import sys, os
 import pandas as pd
 
-def trace(video, contours=[], display=True):
+def trace(video, ROI=[], display=True):
     '''
     :inputs:
         video: original video
-        contours: list of contours for each frame of video (output from find_midline_midpoints.load_contour)
+        ROI: area of interest in video (exluding any external objects)
         display: boolean specifying whether you want to visualize results
   
     :return: an array of the integration of fluorescence for each frame of the video
@@ -17,38 +17,28 @@ def trace(video, contours=[], display=True):
     
     intensities_ = []
     cap = cv2.VideoCapture(video)
-    firstf = True
     iframe = 0
+    firstf = True
 
     while True:
         # Capture frame-by-frame
         ret, frame = cap.read()
+        
+   
+        if firstf:
+            # Create a mask that keeps only pixels w/in ROI
+            ROI_mask = np.ones((frame.shape[0], frame.shape[1]))
+            poly = np.array(ROI, dtype=np.int32)
+            cv2.fillConvexPoly(ROI_mask,poly,0)
+            firstf = False
 
-        if ret:
-            if firstf:
-                size = len(frame) * len(frame[0])
-                firstf = False
-                
+        if ret:         
             # Our operations on the frame come here
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            
-            if contours:
-                # There may be fewer contours than total number of frames in video
-                if iframe == len(contours):
-                    break
-                    
-                curr_contour = contours[iframe]
-                
-                if not curr_contour:
-                    print(f'No polygon found; setting intensity to 0 for {iframe}.')
-                    intensity = 0
-                else:
-                    # Create a mask that keeps only pixels w/in hydra contour
-                    contour_mask = np.ones(frame.shape)
-                    poly = np.array(curr_contour, dtype=np.int32)
-                    cv2.fillConvexPoly(contour_mask,poly,0)
-                    frame = np.ma.masked_array(frame, mask=contour_mask)
-                    intensity = np.sum(frame)
+
+            frame = np.ma.masked_array(frame, mask=ROI_mask)
+            intensity = np.sum(frame)
+
             intensities_.append(intensity)
 
             # Display the resulting frame
@@ -64,7 +54,6 @@ def trace(video, contours=[], display=True):
 
     # Find OpenCV version
     (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
-
 
     # When everything done, release the capture
     cap.release()

@@ -84,7 +84,6 @@ def load_marker(filename):
 
 def locate_point(marker, contour):
     "Locate the corresponding index of the marker on contour"
-
     index = 0
     mindist = np.inf
     for j in range(len(contour)):
@@ -122,7 +121,7 @@ def extract_midline(contour, marker_mat, nseg=20, play=False):
     ind_ped = 0
     ind_arp1 = locate_point(marker['armpit1'], contour)
     ind_arp2 = locate_point(marker['armpit2'], contour)
-    ind_hyp = locate_point(marker['hypostome'], contour)
+    # ind_hyp = locate_point(marker['hypostome'], contour)
 
     # Separate contour to two parts
     ind_arp1, ind_arp2 = min(ind_arp1, ind_arp2), max(ind_arp1, ind_arp2)
@@ -130,9 +129,9 @@ def extract_midline(contour, marker_mat, nseg=20, play=False):
     contour_half_2 = np.array([contour[0]] + contour[ind_arp2:][::-1])
 
     if len(contour_half_1) == 0 or len(contour_half_2) == 0:
-        # DLC markers are inaccurate; e.g. the armpit markers are on top of each other
+        # Problem with locating marker on contour --> index ends up being 0 for body part
+        print("Check that you are using the correct marker and ROI files")
         raise Exception("Half contour is 0.")
-
 
     # Find the midpoints
     midpoints = []
@@ -201,6 +200,8 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
             print(f'Unable to calculate midline for frame {iframe}.')
             # Can't accurately calculate midpoints, so pass in empty lists as placeholders
             midpoints, _, _ = [],[],[]
+            # This is a serious problem, should not continue
+            raise excep
         midpoints_all.append(midpoints)
 
     return midpoints_all

@@ -9,7 +9,7 @@ from collections import defaultdict
 from cv2 import cv2
 from tqdm import tqdm
 from scipy.signal import savgol_filter
-from hydracv.midline.spline_fit import fit
+from midline.spline_fit import fit
 
 class Classifier:
     """A classifier for hydra behaviors"""
