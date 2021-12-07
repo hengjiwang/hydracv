@@ -66,7 +66,7 @@ def fit(filename, display=True):
         fig = plt.figure(figsize=(10, 10))
 
 
-    for iframe in tqdm(range(3100, len(midpoints))):
+    for iframe in tqdm(range(len(midpoints))):
 
         line = midpoints[iframe]
 
