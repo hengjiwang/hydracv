@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.ndimage
 import scipy.signal
-import hydracv.utils.disp as disp
+import utils.disp as disp
 import xml.etree.ElementTree as ET
 
 def find_peaks(seq, height=0.1, wlen=100, prominence=0.025, min_cb_interval=10, realign=True, start=0, end=-1, display=True):
