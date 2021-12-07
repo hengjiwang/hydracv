@@ -24,12 +24,15 @@ def trace(video, ROI=[], display=True):
         # Capture frame-by-frame
         ret, frame = cap.read()
         
-   
         if firstf:
-            # Create a mask that keeps only pixels w/in ROI
-            ROI_mask = np.ones((frame.shape[0], frame.shape[1]))
-            poly = np.array(ROI, dtype=np.int32)
-            cv2.fillConvexPoly(ROI_mask,poly,0)
+            if ROI == []:
+                # if no ROI is passed in, default to keeping all pixels in frame
+                ROI_mask = np.zeros((frame.shape[0], frame.shape[1]))
+            else:
+                # Create a mask that keeps only pixels w/in ROI
+                ROI_mask = np.ones((frame.shape[0], frame.shape[1]))
+                poly = np.array(ROI, dtype=np.int32)
+                cv2.fillConvexPoly(ROI_mask,poly,0)
             firstf = False
 
         if ret:         
