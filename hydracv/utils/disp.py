@@ -1,10 +1,11 @@
 import numpy as np
 import random
 
-def add_fluorescence(ax, time_axis, fluo):
+def add_fluorescence(ax, time_axis, fluo, xlabel, ylabel="fluorescence"):
     """Add a plot of fluo to ax"""
     ax.plot(time_axis, fluo, 'g-')
-    ax.set_ylabel("fluorescence (a.u.)")
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
 
 def add_midline_len(ax, time_axis, midline_len):
     """Add a plot of midline length to ax"""

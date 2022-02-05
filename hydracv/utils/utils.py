@@ -10,7 +10,7 @@ import scipy.signal
 import utils.disp as disp
 import xml.etree.ElementTree as ET
 
-def find_peaks(seq, height=0.1, wlen=100, prominence=0.025, min_cb_interval=10, realign=True, start=0, end=-1, display=True):
+def find_peaks(seq, height=0.1, wlen=100, prominence=0.025, realign=True, start=0, end=-1, display=True):
     "Find peaks of seq"
     orig_seq = seq
     seq = normalize(seq)
@@ -22,14 +22,14 @@ def find_peaks(seq, height=0.1, wlen=100, prominence=0.025, min_cb_interval=10, 
     if display:
         fig = plt.figure(figsize=(20, 3))
         ax = fig.add_subplot(1, 1, 1)
-        disp.add_fluorescence(ax, range(len(orig_seq)), orig_seq)
+        disp.add_fluorescence(ax, range(len(orig_seq)), orig_seq, xlabel="frame #", ylabel="fluo")
         disp.add_peaks(ax, peaks, orig_seq, 1)
         ax.set_xlim(start, end)
         plt.show()
 
     return np.array([x for x in peaks if start < x < end])
 
-def cluster_peaks(peaks, min_cb_interval, realign=True):
+def cluster_peaks(peaks, min_cb_interval, realign=True, display=True):
     """Separate peaks into different clusters based on min_cb_interval(in frame numbers)"""
     clusters = [[]]
 
@@ -42,21 +42,22 @@ def cluster_peaks(peaks, min_cb_interval, realign=True):
             pass
         else:
             clusters.append([])
-
+    
+    # Add last peak to last cluster
     clusters[-1].append(peaks[-1])
 
     # Subtracting offsets
-    indices_to_keep = []
+    clusters_to_keep = []
     for i in range(len(clusters)):
         cluster = clusters[i]
-        if len(cluster) >= 3:
-            indices_to_keep.append(i)
         if realign:
             offset = cluster[0]
             for j in range(len(cluster)):
                 cluster[j] -= offset
+        if len(cluster) >= 3:
+            clusters_to_keep.append(cluster)
 
-    return np.array(clusters)[indices_to_keep]
+    return clusters_to_keep
 
 def reformat_periods(periods, unit='sec'):
     "Reformat periods extracted from manual labeling data"
@@ -333,3 +334,64 @@ def locate_point(marker, contour):
             index = j
 
     return index
+
+def smooth_timeseries(df, kernel_size):
+    "Smooth fluo timeseries using convolution"
+    
+    # apply padding to handle boundary effects of conv
+    pad_size = int(kernel_size/2)
+    start_pad = np.full(pad_size, df[0])
+    end_pad = np.full(pad_size, df[-1])
+    df_padded = np.concatenate((start_pad, df, end_pad))
+
+    kernel = np.ones(kernel_size) / kernel_size
+
+    df_convolved = np.convolve(df_padded, kernel, mode='same')
+    
+    return df_convolved[pad_size:-pad_size]
+
+def remove_trend_fluo(fluo, display=False):
+    """
+    Finds and subtracts the linear trend from the fluo time series.
+    The trend exists due to GCaMP losing brightness over time.
+    """
+    
+    x = np.arange(len(fluo))
+    m, b = np.polyfit(x, fluo, 1)
+    if display:
+        plt.figure(figsize=(20,3))
+        plt.plot(x, m*x + b)
+        plt.plot(fluo, 'g')
+        plt.show()
+    f = lambda x: m*x + b
+    trend = f(x)
+    return np.subtract(fluo, trend)
+
+def contraction_events(behaviors):
+    """ 
+    Returns start and end times for contraction events
+    Format: [start1 end1 start2 end2 start3 end3 ... start_n end_n]
+    """
+
+    contraction = np.zeros(len(behaviors))
+
+    for i in range(len(contraction)):
+        if behaviors[i][0] == 'Contraction':
+            contraction[i] = 1
+
+    bounds = []
+
+    prev_contract = False
+    frame_num = 0
+    for i in contraction:
+        if i == 1 and not prev_contract:
+            bounds.append(frame_num)
+            prev_contract = True
+        elif i == 0 and prev_contract == True:
+            bounds.append(frame_num)
+            prev_contract = False
+        elif i == 0:
+            prev_contract = False
+        frame_num += 1
+    
+    return bounds
