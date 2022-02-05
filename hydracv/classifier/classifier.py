@@ -10,6 +10,7 @@ from cv2 import cv2
 from tqdm import tqdm
 from scipy.signal import savgol_filter
 from midline.spline_fit import fit
+import hydracv.utils.utils as utils
 
 class Classifier:
     """A classifier for hydra behaviors"""
@@ -20,6 +21,8 @@ class Classifier:
         self.npoints = None
         self.videopath = None
         self.behaviors = []
+        self.cb_bounds = []
+        self.rp_bounds = []
         self.slopes = []
         self.fps = None
         self.curv = []
@@ -106,7 +109,6 @@ class Classifier:
                 else:
                     self.behaviors.append(['Elongation'])
                 continue
-                    
 
             if slope < lo_slp_thres:
                 self.behaviors.append(['Contraction'])
@@ -131,7 +133,7 @@ class Classifier:
         
 
 
-    def classify(self, winlen_slp=31, lo_slp_thres=0, hi_slp_thres=0,
+    def classify_behavior(self, winlen_slp=31, lo_slp_thres=0, hi_slp_thres=0,
                  lo_len_thres=0.2, hi_len_thres=0.7, curv_thres=0.005,
                  cb_no_elong=True, elong_no_cb=True):
         "Run the classification"
@@ -142,6 +144,41 @@ class Classifier:
         # Classify bending or not
         self._classify_bend(curv_thres)
 
+    def classify_neural_activity(self, cb_combine=30, min_cb_size=10):
+        """
+        'cb_combine': combine two contraction periods into one CB event if they are fewer than 'cb_combine' frames apart
+        'min_cb_size': cb events should not be shorter than this value
+        """
+        if self.behaviors == []:
+            raise Exception("Must run 'classify_behavior' prior to calling this method.")
+        
+        contraction_events = utils.contraction_events(self.behaviors)
+    
+        start_prev = contraction_events[0]
+        end_prev = contraction_events[1]
+        prev = contraction_events[0]
+        i = 2
+        combined_contractions = []
+        while i < len(contraction_events)-1:
+            start_curr = contraction_events[i]
+            end_curr = contraction_events[i+1]
+            if start_curr - end_prev < cb_combine:
+                pass
+                # do not update previous start, since it remains the same
+            else:
+                combined_contractions.extend([start_prev,end_prev])
+                start_prev = start_curr
+            end_prev = end_curr
+            i += 2
+        combined_contractions.extend([start_prev, end_prev])
+
+        # take another pass through events and this time elimante ones that are two brief
+        it = iter(combined_contractions)
+        for x in it:
+            start = x
+            end = next(it)
+            if end - start > min_cb_size:
+                self.cb_bounds.extend([start,end])
 
     def play(self, save=True, outname="Control-EGCaMP_exp1_a1_30x10fps", fps=200):
         "Play the results"
@@ -225,6 +262,12 @@ class Classifier:
         if savepath:
             plt.savefig(savepath)
         plt.show()
+    
+    def plot_cb_periods(self,ax,frame_start,frame_end):
+        for iframe in tqdm(range(frame_start,frame_end)):
+            if self.behaviors[iframe][0] == 'Contraction':
+                ax.hlines(0, iframe/self.fps, (iframe+1)/self.fps, colors='b', alpha = 0.2, linewidth=400)
+        plt.show()
 
     def plot_slopes_and_lengths(self):
         "Plot slopes and lengths"
@@ -237,8 +280,8 @@ class Classifier:
         ax.set_ylabel('length (a.u.)')
         ax2 = ax.twinx()
         ln2 = ax2.plot(x, self.slopes, 'r', label='slope')
-        ax2.hlines(0.0005, 0, self.nframes/self.fps, linestyles='--')
-        ax2.hlines(-0.0005, 0, self.nframes/self.fps, linestyles='--')
+        ax2.hlines(self.hi_slp_thres, 0, self.nframes/self.fps, linestyles='--')
+        ax2.hlines(self.lo_slp_thres, 0, self.nframes/self.fps, linestyles='--')
         ax2.set_ylabel('slope')
         lns = ln1 + ln2
         labs = [l.get_label() for l in lns]
