@@ -262,12 +262,11 @@ class Classifier:
         if savepath:
             plt.savefig(savepath)
         plt.show()
-    
-    def plot_cb_periods(self,ax,frame_start,frame_end):
-        for iframe in tqdm(range(frame_start,frame_end)):
-            if self.behaviors[iframe][0] == 'Contraction':
-                ax.hlines(0, iframe/self.fps, (iframe+1)/self.fps, colors='b', alpha = 0.2, linewidth=400)
-        plt.show()
+
+    def plot_cb_periods(self,ax):
+        it = iter(self.cb_bounds)
+        for x in it:
+            ax.axvspan(x, next(it), color='orange', alpha=0.3)
 
     def plot_slopes_and_lengths(self):
         "Plot slopes and lengths"
