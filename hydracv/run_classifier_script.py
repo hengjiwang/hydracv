@@ -1,6 +1,11 @@
 import NN_classifier
 import sys
 
+"""
+This is a short script used for running NN_classifier.py.
+Specify the arguments you'd like to pass into the classifier here.
+"""
+
 VIDEO_NAME = "71420_ngcamp_hy6_peduncle48hr" # TO MODIFY
 BODY_PART = "/Peduncle/" # TO MODIFY
 SAVE_DIR = '/Users/katyabrooun/Fairhall_Lab/hydra/bisection-data-analysis/exp6' + BODY_PART #TO MODIFY

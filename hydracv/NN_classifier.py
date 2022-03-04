@@ -10,6 +10,26 @@ import cv2
 import scipy
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
+"""
+A GUI for manually classifying Hydra neural activity into "CB", "RP", or "Neither."
+
+Required:
+* GCaMP video of behaving Hydra
+* Midline lengths for each video frame
+* Total fluorescence intensity for each frame of video
+* Indices of peaks in fluorescence activity
+
+You can run this script from the command line using:
+
+`pythonw NN_classifier.py [arg1] [arg2] ... [arg_n]`
+
+Since there are quite a few file path arguments, you can use `run_classifier_script.py`
+to more conveniently define these arguments. Then you can simply run:
+
+`pythonw run_classifier_script.py`
+
+"""
+
 IMG_SCALE = 0.75
 
 class Classifier_GUI(wx.Frame):
