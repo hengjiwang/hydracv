@@ -335,21 +335,6 @@ def locate_point(marker, contour):
 
     return index
 
-def smooth_timeseries(df, kernel_size):
-    "Smooth fluo timeseries using convolution"
-    
-    # apply padding to handle boundary effects of conv
-    pad_size = int(kernel_size/2)
-    start_pad = np.full(pad_size, df[0])
-    end_pad = np.full(pad_size, df[-1])
-    df_padded = np.concatenate((start_pad, df, end_pad))
-
-    kernel = np.ones(kernel_size) / kernel_size
-
-    df_convolved = np.convolve(df_padded, kernel, mode='same')
-    
-    return df_convolved[pad_size:-pad_size]
-
 def remove_trend_fluo(fluo, display=False):
     """
     Finds and subtracts the linear trend from the fluo time series.
@@ -395,3 +380,25 @@ def contraction_events(behaviors):
         frame_num += 1
     
     return bounds
+
+def plot_fluo_len(
+    ax,
+    fluo,
+    length,
+    x,
+    xlabel='',
+    label_f="fluo",
+    label_l="length",
+    alpha_f=1,
+    alpha_l=1
+):
+    
+    lns1 = ax.plot(x, length, 'b', label=label_l,alpha=alpha_l)
+    lns2 = ax.plot(x, fluo, 'g', label=label_f,alpha=alpha_f)
+
+    lns = lns1 + lns2
+    labs = [l.get_label() for l in lns]
+    ax.legend(lns, labs, loc='best')
+    ax.set(xlabel=xlabel)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)

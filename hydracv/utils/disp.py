@@ -13,9 +13,9 @@ def add_midline_len(ax, time_axis, midline_len):
     ax.set_xlabel("time(s)")
     ax.set_ylabel("midline length (pixels)")
 
-def add_peaks(ax, pks, fluo, fps):
+def add_peaks(ax, pks, fluo, fps, start=0, marker='xm'):
     """Add pks on fluo"""
-    ax.plot([x/fps for x in pks], np.array(fluo)[pks], 'xb')
+    ax.plot([(x + start)/fps for x in pks], np.array(fluo)[pks], marker)
 
 def add_spike_trains(ax, spk_trains, fps):
     """Add a scatter plot of spk_trains to ax"""
