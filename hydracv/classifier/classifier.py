@@ -96,15 +96,15 @@ class Classifier:
 
             # If don't want elongation during CB
             if cb_no_elong and self.lengths[i] < lo_len_thres:
-                if slope > 0.001:
+                if slope > hi_slp_thres:
                     self.behaviors.append(['Elongation'])
                 else:
                     self.behaviors.append(['Contraction'])
                 continue
 
-            # If don't want contraction during elongated
+            # If don't want contraction during elongation
             if elong_no_cb and self.lengths[i] > hi_len_thres:
-                if slope < -0.002:
+                if slope < lo_slp_thres:
                     self.behaviors.append(['Contraction'])
                 else:
                     self.behaviors.append(['Elongation'])

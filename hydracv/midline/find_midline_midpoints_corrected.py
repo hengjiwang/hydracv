@@ -191,30 +191,21 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40, display=Fal
     markers = load_marker(file_marker)
     midpoints_orig = load_midpoints(file_midpoints)
 
-    missed_contour = list(range(12096, 12145))
-    markers = [x for i,x in enumerate(markers) if i not in missed_contour]
-
-    # markers = markers[:]
-    # contours = contours[7:]
-
-    print(len(contours), len(markers))
+    # missed_contour = list(range(12096, 12145))
+    # markers = [x for i,x in enumerate(markers) if i not in missed_contour]
 
     midlens = extract_lengths(midpoints_orig)
 
     midpoints_all = []
 
-    # iframe = 0
-
-    if display:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-    else:
-        ax = None
-
     for iframe in tqdm(range(len(contours))):
 
         if display:
-            ax.clear()
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+        
+        else:
+            ax = None
 
         # Extract contour and marker
         contour = contours[iframe]
@@ -319,7 +310,7 @@ def find_midline(file_contour, file_marker, file_midpoints, nseg=40, display=Fal
         if display:
             ax.set_xlim(0, 500)
             ax.set_ylim(0, 500)
-            plt.pause(0.00001)
+            plt.show()
 
 
     return midpoints_all

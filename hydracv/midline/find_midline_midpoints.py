@@ -4,55 +4,61 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from collections import defaultdict
 import xml.etree.ElementTree as ET
+import matplotlib.pyplot as plt
 from cv2 import cv2
 from tqdm import tqdm
 
-def load_contour(filename):
-    "Load and reformat contour"
+def load_contour(filenames):
+    """Load and reformat contour"
 
-    file_format = filename.split('.')[-1]
-    if file_format == 'pkl':
-        with open(filename, 'rb') as pickle_file:
-            contours = pickle.load(pickle_file)
-        # Reformat data
-        for iframe in range(len(contours)):
-            pts = [(pt[0][0], pt[0][1]) for pt in contours[iframe][0]]
-            contours[iframe] = pts
+    'filenames' is a list of file names representing contours for consecutive frames
+    
+    """
+    contours_combined = []
+    for filename in filenames:
+        file_format = filename.split('.')[-1]
+        if file_format == 'pkl':
+            with open(filename, 'rb') as pickle_file:
+                contours = pickle.load(pickle_file)
+            # Reformat data
+            for iframe in range(len(contours)):
+                pts = [(pt[0][0], pt[0][1]) for pt in contours[iframe][0]]
+                contours[iframe] = pts
 
-    elif file_format == 'xml':
-        try:
-            root = ET.parse(filename).getroot()
-            rois = root.find('rois').findall('roi')
-            contours = []
-            for roi in rois[1:]:
-                points = roi.find('points').findall('point')
-                contour = []
-                for point in points:
-                    pos_x = float(point.find('pos_x').text)
-                    pos_y = float(point.find('pos_y').text)
-                    contour.append((pos_x, pos_y))
-                contours.append(contour)
-        except:
-            root = ET.parse(filename).getroot()
-            rois = root.findall('roi')
-            contours = []
-            for i in range(len(rois)):
-                contours.append(0)
+        elif file_format == 'xml':
+            try:
+                root = ET.parse(filename).getroot()
+                rois = root.find('rois').findall('roi')
+                contours = []
+                for roi in rois[1:]:
+                    points = roi.find('points').findall('point')
+                    contour = []
+                    for point in points:
+                        pos_x = float(point.find('pos_x').text)
+                        pos_y = float(point.find('pos_y').text)
+                        contour.append((pos_x, pos_y))
+                    contours.append(contour)
+            except:
+                root = ET.parse(filename).getroot()
+                rois = root.findall('roi')
+                contours = []
+                for i in range(len(rois)):
+                    contours.append(0)
 
-            for roi in rois:
-                id = int(roi.find('t').text)
-                points = roi.find('points').findall('point')
-                contour = []
-                for point in points:
-                    pos_x = float(point.find('pos_x').text)
-                    pos_y = float(point.find('pos_y').text)
-                    contour.append((pos_x, pos_y))
-                try:
-                    contours[id] = contour
-                except:
-                    print(id)
-
-    return contours
+                for roi in rois:
+                    id = int(roi.find('t').text)
+                    points = roi.find('points').findall('point')
+                    contour = []
+                    for point in points:
+                        pos_x = float(point.find('pos_x').text)
+                        pos_y = float(point.find('pos_y').text)
+                        contour.append((pos_x, pos_y))
+                    try:
+                        contours[id] = contour
+                    except:
+                        print(id)
+        contours_combined.extend(contours)
+    return contours_combined
 
 def intp_seq(seq, nintp):
     "Interpolate sequence"
@@ -164,7 +170,7 @@ def extract_midline(contour, marker_mat, nseg=20, play=False):
 
     return midpoints, contour_half_1, contour_half_2
 
-def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
+def find_midline(file_contour, file_marker, nseg=40, play=False):
     "Find midline"
 
     # Load files
@@ -176,18 +182,15 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
 
     print('Markers loaded, the size is: ' + str(len(markers)))
 
-    missed_contour = [] # list(range(12096, 12145))
+    missed_contour = []
     print('Number of missed contours is: ' + str(len(missed_contour)))
 
     markers = [x for i,x in enumerate(markers) if i not in missed_contour]
-    # contours = contours[7:]
 
     midpoints_all = []
 
     # Align data
     nframes = min(len(contours), len(markers))
-    # contours = contours[:nframes]
-    # markers = markers[:nframes].values
 
     for iframe in tqdm(range(nframes)):
 
@@ -201,7 +204,7 @@ def find_midline(file_contour, file_marker, file_video="", nseg=40, play=False):
             # Can't accurately calculate midpoints, so pass in empty lists as placeholders
             midpoints, _, _ = [],[],[]
             # This is a serious problem, should not continue
-            raise excep
+            # raise excep
         midpoints_all.append(midpoints)
 
     return midpoints_all
