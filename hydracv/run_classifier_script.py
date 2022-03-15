@@ -6,7 +6,7 @@ This is a short script used for running NN_classifier.py.
 Specify the arguments you'd like to pass into the classifier here.
 """
 
-VIDEO_NAME = "71420_ngcamp_hy6_peduncle48hr" # TO MODIFY
+VIDEO_NAME = "71420_ngcamp_hy6_peduncle72hr" # TO MODIFY
 BODY_PART = "/Peduncle/" # TO MODIFY
 SAVE_DIR = '/Users/katyabrooun/Fairhall_Lab/hydra/bisection-data-analysis/exp6' + BODY_PART #TO MODIFY
 
@@ -34,7 +34,8 @@ def main():
         peaks_path = FILE_FLUO_PEAKS,
         frames_dir = FRAMES_DIR,
         save_file = SAVE_FILE,
-        extract = False
+        start_index = 0,
+        extract = True
     )
     NN_classifier.initialize_GUI(args)
 
