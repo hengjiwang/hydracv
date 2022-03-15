@@ -40,12 +40,13 @@ class Classifier_GUI(wx.Frame):
         self.peaks_path = args.peaks_path
         self.frames_dir = args.frames_dir
         self.save_file = args.save_file
+        self.curr_pk_ind = args.start_index
         self.generate_frames = args.extract
 
         self.peaks = pd.read_csv(self.peaks_path).values.reshape(-1)
-        self.curr_pk_ind = 0
 
-        self.pk_network = []
+        # 0 = neither, 1 = CB, 2 = RP
+        self.pk_network = np.zeros(len(self.peaks))
 
         default_font = wx.Font(18,wx.MODERN, wx.NORMAL, wx.NORMAL)
 
@@ -54,7 +55,7 @@ class Classifier_GUI(wx.Frame):
             self.convert_video_to_frames()
 
         # Create GUI window
-        super().__init__(parent=None, title='Hydra Neural Network Classifier', size=(1200, 800))
+        super().__init__(parent=None, title='Hydra Neural Network Classifier', size=(1200, 850))
 
         # Create panel within window that contains rest of GUI components
         container_panel = ContainerPanel(self)   
@@ -65,7 +66,7 @@ class Classifier_GUI(wx.Frame):
         self.info.SetLabel(self.getInfoText(self.peaks[self.curr_pk_ind]))
         self.info.SetFont(default_font)
         self.info.SetBackgroundColour(wx.Colour(255,255,255))
-        container_sizer.Add(self.info, 0, wx.CENTER|wx.TOP, border=20)
+        container_sizer.Add(self.info, 0, wx.CENTER|wx.TOP, border=10)
 
         self.currFrame = self.peaks[self.curr_pk_ind]
 
@@ -81,7 +82,12 @@ class Classifier_GUI(wx.Frame):
         undo_btn.Bind(wx.EVT_BUTTON, self.Undo)
         top_button_box.Add(undo_btn, 0)
 
-        container_sizer.Add(top_button_box, 0, wx.ALL | wx.CENTER, 10) 
+        # Add save progess button
+        save_btn = wx.Button(container_panel,-1,"Save progress",size=(150,50))
+        save_btn.Bind(wx.EVT_BUTTON, self.SaveProgress)
+        top_button_box.Add(save_btn, 0)
+
+        container_sizer.Add(top_button_box, 0, wx.CENTER) 
 
         # Video frames panel
         self.video_frames = VideoFramesPanel(parent=container_panel, currFrame=self.currFrame)
@@ -131,13 +137,27 @@ class Classifier_GUI(wx.Frame):
     
     def Undo(self, event):
         if self.curr_pk_ind > 0:
-            # remove last element from classifications list
-            self.pk_network.pop(-1)
             self.curr_pk_ind -= 1
+            # change previous element to "Neither"
+            self.pk_network[self.curr_pk_ind] = 0
+            print("Undid classification for previous frame.")
             self.updateForNewFrame()
-
-    def saveClassifications(self, file_name):
-        df = pd.DataFrame(self.pk_network)
+    
+    def SaveProgress(self,event):
+        self.saveClassifications()
+        print(f"Your classifications for the first {self.curr_pk_ind} peak(s) have been saved in {self.save_file}.")
+    
+    def saveClassifications(self):
+        # convert np array of integers to list of strings
+        network_labels = []
+        for id in self.pk_network:
+            if id == 1:
+                network_labels.append("CB")
+            elif id == 2:
+                network_labels.append("RP")
+            else:
+                network_labels.append("Neither")
+        df = pd.DataFrame(network_labels)
         df.to_csv(self.save_file,index=False)
 
     def onClose(self,event):
@@ -151,14 +171,18 @@ class Classifier_GUI(wx.Frame):
     
     def on_press(self, event):
         btn_name = event.GetEventObject().name
-        self.pk_network.append(btn_name)
+
+        if btn_name == "CB":
+            self.pk_network[self.curr_pk_ind] = 1
+        elif btn_name == "RP":
+            self.pk_network[self.curr_pk_ind] = 2
         print(f'Frame {self.peaks[self.curr_pk_ind]} classified as {btn_name}.')
         self.curr_pk_ind += 1
 
-         # Stopping condition
+        # Stopping condition
         if self.curr_pk_ind >= len(self.peaks):
             self.saveClassifications()
-            print(f"Your classificatins have been saved in {self.save_file}.")
+            print(f"Your classifications have been saved in {self.save_file}.")
             # Close app window
             self.Close()
         
@@ -176,7 +200,12 @@ class Classifier_GUI(wx.Frame):
         success,image = vidcap.read()
         count = 0
         while success:
-            cv2.imwrite(self.frames_dir + "frame%d.jpg" % count, image)     # save frame as JPEG file      
+            frame_name = "frame%d.jpg" % count
+            writeStatus = cv2.imwrite(self.frames_dir + frame_name, image)     # save frame as JPEG file      
+            if writeStatus is True:
+                print(f"Wrote {frame_name}")
+            else:
+                raise Exception("Failed to write image. Make sure the directory exists.")
             success,image = vidcap.read()
             count += 1
     
@@ -301,7 +330,9 @@ def main(argv=sys.argv[1:]):
     parser.add_argument('peaks_path',help=".csv file containing a series of frame indicies at which there are spikes in fluorescence")
     parser.add_argument('frames_dir', help="directory where video frames are saved")
     parser.add_argument('save_file', help="file name where you'd like to save classification results")
+    parser.add_argument('start_index', help="Use this if you have some classification progress already saved.")
     parser.add_argument('--extract', help="extract frames of videos so they can be displayed in GUI")
+    
     args = parser.parse_args(args=argv)
     initialize_GUI(args)
     
